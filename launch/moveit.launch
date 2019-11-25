@@ -6,7 +6,7 @@
 
 
   <!-- Launch gazebo and spawn sawyer robot -->
-  <group if="$(arg if_sim)"> 
+  <group if="$(arg if_sim)">
     <include file="$(find sawyer_gazebo)/launch/sawyer_world.launch">
     </include>
   </group>
@@ -18,6 +18,7 @@
   <!-- Launch sawyer moveit rviz -->
   <!-- Modified MoveGroupExecuteService to MoveGroupExecuteTrajectoryAction in move_group.launch -->
   <include file="$(find mini_golf)/launch/sawyer_moveit.launch">
+      <arg name="electric_gripper" value="true"/>
   </include>
 
   <!-- Launch move_group_python_interface -->
