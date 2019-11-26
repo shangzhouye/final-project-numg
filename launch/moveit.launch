@@ -8,7 +8,6 @@
   <!-- Launch gazebo and spawn sawyer robot -->
   <group if="$(arg if_sim)">
     <include file="$(find sawyer_gazebo)/launch/sawyer_world.launch">
-      <arg name="electric_gripper" value="true"/>
     </include>
   </group>
 
@@ -23,6 +22,8 @@
   </include>
 
   <!-- Launch move_group_python_interface -->
-  <node name="c" pkg="mini_golf" type="move_group_python_interface" output="screen"/>
+  <node name="c" pkg="mini_golf" type="move_group_python_interface" output="screen">
+    <remap from="joint_states" to="robot/joint_states"/>
+  </node>
 
 </launch>

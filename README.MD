@@ -6,20 +6,6 @@
 
 A mini golfing robot. 
 
-## How to use it
-
-To launch Gazebo simulation, moveit and rviz:
-
-- install moveit for melodic
-- install sawyer moveit configuration package (it is included in the rethink_moveit.rosinstall file in the repo)
-- launch `moveit.launch` (`moveit.launch` would launch the gazebo simulation, moveit configuration for sawyer, rviz, and move_group_python_interface node)
-   - if using the real robot instead of simulation, set if_sim to be false
-
-## Nodes
-
-- `move_group_python_interface` node can move the end effector to a certain pose (position and orientation)
-  - the target pose is currently hardcoded in the python node
-
 ## Project Proposal
 
 ### Description:
