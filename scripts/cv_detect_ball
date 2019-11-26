@@ -7,9 +7,6 @@ import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge #CvBridgeError
 import cv2
-import sys
-
-np.set_printoptions(threshold=sys.maxsize)
 
 class DetectBall(object):
     """
