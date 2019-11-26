@@ -18,7 +18,8 @@ To launch Gazebo simulation, moveit and rviz:
 ## Nodes
 
 - `move_group_python_interface` node can move the end effector to a certain pose (position and orientation)
-  - the target pose is currently hardcoded in the python node
+  - `get_start_pose` function is able to calculate the starting pose given the hole position and ball position
+  - default distance between the ball and starting position of the putter is 5cm
 
 ## Project Proposal
 
