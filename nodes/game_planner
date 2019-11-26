@@ -1,0 +1,23 @@
+#!/usr/env/bin python 
+import rospy 
+import actionlib
+
+class GamePlanner(object):
+	def __init__(self):
+		#perform subscriptiosn
+
+		#establish publishers
+
+		#set initial state
+		self.state = 'uninitialized'
+
+	def loop(self):
+
+
+
+
+
+
+if __name__ == '__main__':
+	rospy.init_node("game_planner")
+	GamePlanner()
