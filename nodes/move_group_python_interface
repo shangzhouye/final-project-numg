@@ -160,14 +160,14 @@ if __name__ == '__main__':
     # get current state
     rospy.loginfo(my_sawyer.current_state())
 
+    # add the table to the planning scene
+    my_sawyer.add_table()
+
     # calculaete starting pose
     position, orientation = my_sawyer.get_start_pose([0.63,-0.34,0.07],[0.68,0.27,0.07])
     rospy.loginfo('The orientation is: %s', orientation)
 
     # go to starting pose
     my_sawyer.go_to_pose(position,orientation)
-
-    # add the table to the planning scene
-    my_sawyer.add_table()
 
     rospy.spin()

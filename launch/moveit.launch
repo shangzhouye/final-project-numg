@@ -9,6 +9,16 @@
   <group if="$(arg if_sim)">
     <include file="$(find sawyer_gazebo)/launch/sawyer_world.launch">
       <arg name="electric_gripper" value="true"/>
+      <!-- Modify the initial joint states to not collide with the table -->
+      <arg name="initial_joint_states"
+        value=" -J sawyer::right_j0 0.00
+                -J sawyer::right_j1 0.00
+                -J sawyer::right_j2 0.00
+                -J sawyer::right_j3 0.00
+                -J sawyer::right_j4 0.00
+                -J sawyer::right_j5 0.00
+                -J sawyer::right_j6 0.00
+                -J sawyer::head_pan 0.00"/>
     </include>
   </group>
 
