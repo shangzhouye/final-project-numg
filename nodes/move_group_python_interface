@@ -35,6 +35,10 @@ class MoveGroupPythonInterface(object):
         self.display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
                                                moveit_msgs.msg.DisplayTrajectory,
                                                queue_size=20)
+        self.eef_link = self.move_group.get_end_effector_link()
+        rospy.loginfo('End effector link: %s', self.eef_link)
+
+
     
 
     def current_state(self):
@@ -73,6 +77,7 @@ class MoveGroupPythonInterface(object):
         # It is always good to clear your targets after planning with poses.
         # Note: there is no equivalent function for clear_joint_value_targets()
         self.move_group.clear_pose_targets()
+
 
 
     def get_start_pose(self, pos_hole, pos_ball, distance = 0.05):
@@ -125,18 +130,44 @@ class MoveGroupPythonInterface(object):
         return position, orientation
 
 
+    def add_table(self, x_offset=0.6, z_height=0.02):
+        ''' Add table to the planning scene 
+        
+        Args:
+            x_offset (m) : the distance from center of the table to world frame in x direction
+            z_height (m) : the height of the table (upper surface)
+        '''
+        table_pose = geometry_msgs.msg.PoseStamped()
+        table_pose.header.frame_id = "world"
+        table_pose.pose.orientation.w = 1.0
+        table_pose.pose.position.x = x_offset
+        table_pose.pose.position.z = z_height - 0.05
+        table_name = "table"
+        table_size = (0.6096, 1.2192, 0.05)
+        self.scene.add_box(table_name, table_pose, size=table_size)
+
+
 
 
 
 if __name__ == '__main__':
     moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node('move_group_python_interface', anonymous=True, log_level=rospy.DEBUG)
+
+    # initialize move group commander
     my_sawyer = MoveGroupPythonInterface()
+
+    # get current state
     rospy.loginfo(my_sawyer.current_state())
 
-
+    # calculaete starting pose
     position, orientation = my_sawyer.get_start_pose([0.63,-0.34,0.07],[0.68,0.27,0.07])
     rospy.loginfo('The orientation is: %s', orientation)
 
+    # go to starting pose
     my_sawyer.go_to_pose(position,orientation)
+
+    # add the table to the planning scene
+    my_sawyer.add_table()
+
     rospy.spin()
