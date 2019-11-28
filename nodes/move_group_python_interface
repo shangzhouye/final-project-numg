@@ -36,10 +36,20 @@ class MoveGroupPythonInterface(object):
                                                moveit_msgs.msg.DisplayTrajectory,
                                                queue_size=20)
         self.eef_link = self.move_group.get_end_effector_link()
-        rospy.loginfo('End effector link: %s', self.eef_link)
+        rospy.logdebug('End effector link: %s', self.eef_link)
 
-
-    
+        # for not detecting collision between the putter and the following links
+        self.gripper_links = ['right_gripper_base',\
+                                'right_electric_gripper_base',\
+                                'right_gripper_tip',\
+                                'right_hand',\
+                                'right_connector_plate_base',\
+                                'right_gripper_l_finger',\
+                                'right_gripper_l_finger_tip',\
+                                'right_gripper_r_finger',\
+                                'right_gripper_r_finger_tip',\
+                                'right_hand_camera',\
+                                'right_wrist']
 
     def current_state(self):
         ''' Get the current state of the robot
@@ -146,7 +156,39 @@ class MoveGroupPythonInterface(object):
         table_size = (0.6096, 1.2192, 0.05)
         self.scene.add_box(table_name, table_pose, size=table_size)
 
+    def add_putter(self):
+        ''' Add putter to the planning scene and attach it to the gripper '''
+        putter_pose = geometry_msgs.msg.PoseStamped()
+        putter_pose.header.frame_id = "right_gripper_tip"
+        putter_pose.pose.orientation.w = 1.0
+        putter_pose.pose.position.z = -0.0325
+        putter_name = "putter"
+        putter_size = (0.018, 0.0625, 0.087)
+        self.scene.add_box(putter_name, putter_pose, size=putter_size)
+        if self.wait_object_update(putter_name):
+            self.scene.attach_box(self.eef_link, putter_name, touch_links=self.gripper_links)
+        else:
+            rospy.logdebug('Attach putter failed.')
 
+
+    def wait_object_update(self, object_name, timeout=4):
+        ''' Wait for the collision update to be completed 
+        
+        Args:
+            object_name : The name of the object to be checked
+            timeout (s) : timeout in seconds
+        '''
+        start = rospy.get_time()
+        seconds = rospy.get_time()
+        while (seconds - start < timeout) and not rospy.is_shutdown():
+            is_known = object_name in self.scene.get_known_object_names()
+            if is_known:
+                return True
+
+            rospy.sleep(0.1)
+            seconds = rospy.get_time()
+
+        return False
 
 
 
@@ -158,14 +200,15 @@ if __name__ == '__main__':
     my_sawyer = MoveGroupPythonInterface()
 
     # get current state
-    rospy.loginfo(my_sawyer.current_state())
+    rospy.logdebug(my_sawyer.current_state())
 
-    # add the table to the planning scene
+    # add the table and putter to the planning scene
     my_sawyer.add_table()
+    my_sawyer.add_putter()
 
     # calculaete starting pose
     position, orientation = my_sawyer.get_start_pose([0.63,-0.34,0.07],[0.68,0.27,0.07])
-    rospy.loginfo('The orientation is: %s', orientation)
+    rospy.logdebug('The orientation is: %s', orientation)
 
     # go to starting pose
     my_sawyer.go_to_pose(position,orientation)
