@@ -5,6 +5,7 @@ from __future__ import print_function
 import rospy
 import numpy as np
 from sensor_msgs.msg import Image
+from geometry_msgs.msg import Pose
 from cv_bridge import CvBridge #CvBridgeError
 import cv2
 
@@ -21,19 +22,26 @@ class DetectBall(object):
 
         #HSV-space ranges for ball color
         #found using script from: https://github.com/opencv/opencv/blob/3.4/samples/cpp/tutorial_code/ImgProc/Threshold_inRange.cpp
-        self.H_range = (10, 30)
-        self.S_range = (0, 160)           #ADJUST THESE TO MATCH COLOR OF ACTUAL BALL
-        self.V_range = (245, 255)
+        self.H_range = (100, 115)
+        self.S_range = (130, 255)             #ADJUST THESE TO MATCH COLOR OF ACTUAL BALL
+        self.V_range = (100, 255)
+        rospy.loginfo("HSV filters set.")
 
         self.bridge = CvBridge()            #converts between ROS and cv2 image
 
-        self.capture = cv2.VideoCapture(2)  #capture from webcam
+        self.capture = cv2.VideoCapture(0)  #capture from webcam
 
         #initialize subscriber
-        rospy.Subscriber('io/internal_camera/head_camera/image_rect_color', Image, self.detect_ball)
+        rospy.Subscriber('/io/internal_camera/head_camera/image_rect_color', Image, self.detect_ball)
+        rospy.loginfo("Subscriber initialized.")
 
         #initialize publisher
         self.image_pub = rospy.Publisher('/sawyer_image_out', Image, queue_size=1)
+        self.ball_pose_pub = rospy.Publisher('/ball_pose', Pose, queue_size=10)
+        self.hole_pose_pub = rospy.Publisher('/hole_pose', Pose, queue_size=10)
+        rospy.loginfo("Publishers initialized.")
+
+        #rospy.loginfo("Initialization done.")
 
     def detect_ball(self, image):
         """
@@ -82,6 +90,7 @@ class DetectBall(object):
 
         self.image_pub.publish(image_out)           #publish image
         '''
+
         #CODE USING WEBCAM BELOW
         #read webcam image
         ret, img_in = self.capture.read()
@@ -94,10 +103,10 @@ class DetectBall(object):
                                     (self.H_range[1], self.S_range[1], self.V_range[1]))
 
         #Gaussian blur
-        blur = cv2.GaussianBlur(img_threshold, (5,5), 0)
+        blur = cv2.GaussianBlur(img_threshold, (5, 5), 0)
 
         #find contours in blurred image
-        img_contours, contours, hierarchy = cv2.findContours(blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        image, contours, hierarchy = cv2.findContours(blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         #find smallest circles enclosing found contours
         circles = []                                                #empty list to hold circle parameters
@@ -125,7 +134,7 @@ def main():
     Main function; initializes the node and calls the DetectBall class
     """
     rospy.loginfo("Beginning Ball Detection...")            #console output message
-    det = DetectBall()
+    DetectBall()
     while not rospy.is_shutdown():
         pass
 
