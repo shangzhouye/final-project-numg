@@ -108,24 +108,22 @@ class DetectBall(object):
         #find contours in blurred image
         image, contours, hierarchy = cv2.findContours(blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-        #find smallest circles enclosing found contours
-        circles = []                                                #empty list to hold circle parameters
-        for i in range(len(contours)):                              #all contours
-            (x, y), radius = cv2.minEnclosingCircle(contours[i])    #smallest enclosing circle
-            centerX = int(x)                                        #center X coordinate
-            centerY = int(y)                                        #center Y coordinate
-            radius = int(radius)                                    #radius
-            circle = ((centerX, centerY), radius)                   #tuple of circle parameters
-            circles.append(circle)                                  #add circle to list
+        #print(len(contours))
+        #isolate largest contour (should be the ball)
+        contour_sizes = [(cv2.contourArea(contour), contour) for contour in contours]
+        #print(contour_sizes)
+        biggest_contour = max(contours, key=cv2.contourArea)
 
-        for i in range(len(circles)):                               #for all circles
-            if circles[i][1] > 75:                                  #if circle radius is too large
-                pass                                                #don't draw it
-            elif circles[i][1] < 75:                                #if radius is not too large
-                img_circles = cv2.circle(img_in, (circles[i][0][0], circles[i][0][1]),  #draw the circle
-                                         circles[i][1], (0, 0, 255), 2)
+        #find smallest circles enclosing biggest contour
+        (x, y), radius = cv2.minEnclosingCircle(biggest_contour)    #smallest enclosing circle
+        centerX = int(x)                                            #center X coordinate
+        centerY = int(y)                                            #center Y coordinate
+        radius = int(radius)                                        #radius
 
-        img_out = self.bridge.cv2_to_imgmsg(img_circles, "bgr8")    #convert cv2 image to ROS image
+        #draw circle on image
+        img_circle = cv2.circle(img_in, (centerX, centerY), radius, (0, 0, 255), 2)
+
+        img_out = self.bridge.cv2_to_imgmsg(img_circle, "bgr8")    #convert cv2 image to ROS image
 
         self.image_pub.publish(img_out)                             #publish image
 
