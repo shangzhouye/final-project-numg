@@ -20,78 +20,91 @@ class DetectBall(object):
         self.rows = 0                       #image height placeholder
         self.cols = 0                       #image width placeholder
 
-        #HSV-space ranges for ball color
-        #found using script from: https://github.com/opencv/opencv/blob/3.4/samples/cpp/tutorial_code/ImgProc/Threshold_inRange.cpp
-        self.H_range = (100, 115)
-        self.S_range = (130, 255)             #ADJUST THESE TO MATCH COLOR OF ACTUAL BALL
-        self.V_range = (100, 255)
+        self.hole_X = 0                     #placeholders for hole locator circle
+        self.hole_Y = 0
+        self.hole_rad = 0
+
+        self.ball_pose = Pose()             #ball position
+        self.hole_pose = Pose()             #hole position
+
+        #colorspaces found using script from:
+        #https://github.com/opencv/opencv/blob/3.4/samples/cpp/tutorial_code/ImgProc/Threshold_inRange.cpp
+        #HSV-space ranges for ball color (blue)
+        self.ball_H_range = (100, 115)
+        self.ball_S_range = (130, 255)
+        self.ball_V_range = (100, 255)
+        #HSV ranges for turf (green)
+        self.turf_H_range = (20, 100)
+        self.turf_S_range = (0, 255)
+        self.turf_V_range = (0, 255)
         rospy.loginfo("HSV filters set.")
 
         self.bridge = CvBridge()            #converts between ROS and cv2 image
 
         self.capture = cv2.VideoCapture(0)  #capture from webcam
 
-        #initialize subscriber
-        rospy.Subscriber('/io/internal_camera/head_camera/image_rect_color', Image, self.detect_ball)
-        rospy.loginfo("Subscriber initialized.")
-
-        #initialize publisher
+        #initialize publishers
         self.image_pub = rospy.Publisher('/sawyer_image_out', Image, queue_size=1)
         self.ball_pose_pub = rospy.Publisher('/ball_pose', Pose, queue_size=10)
         self.hole_pose_pub = rospy.Publisher('/hole_pose', Pose, queue_size=10)
         rospy.loginfo("Publishers initialized.")
 
-        #rospy.loginfo("Initialization done.")
+        #call hole-locating function
+        self.find_hole()
+
+        #initialize subscriber
+        rospy.Subscriber('/io/internal_camera/head_camera/image_rect_color', Image,
+                         self.detect_ball)
+        rospy.loginfo("Subscriber initialized.")
+
+    def find_hole(self):
+        """
+        Finds the hole in the putting green
+        """
+        #read webcam image
+        ret, hole_img_in = self.capture.read()
+
+        #convert image to HSV
+        hole_hsv = cv2.cvtColor(hole_img_in, cv2.COLOR_BGR2HSV)
+
+        #color thresholding - turf (green)
+        turf_threshold = cv2.inRange(hole_hsv, (self.turf_H_range[0], self.turf_S_range[0],
+                                                self.turf_V_range[0]),
+                                     (self.turf_H_range[1], self.turf_S_range[1],
+                                      self.turf_V_range[1]))
+
+        #Gaussian blur
+        turf_blur = cv2.GaussianBlur(turf_threshold, (5, 5), 0)
+
+        #erode & dilate image to remove noise
+        turf_erode = cv2.erode(turf_blur, np.ones((5, 5)), iterations=1)
+        turf_dilate = cv2.dilate(turf_erode, np.ones((5, 5)), iterations=2)
+
+        #find contours in image
+        image, contours, hierarchy = cv2.findContours(turf_dilate, cv2.RETR_LIST,
+                                                      cv2.CHAIN_APPROX_NONE)
+
+        #find contours based on size
+        for cont in contours:                                   #for all contours
+            area = cv2.contourArea(cont)                        #determine contour area
+            if area > 1250 and area < 1750:                     #if contour is correct size
+                (x, y), radius = cv2.minEnclosingCircle(cont)   #find smallest circle enclosing it
+                self.hole_X = int(x)                            #hole center x-coordinate
+                self.hole_Y = int(y)                            #hole center y-coordinate
+                self.hole_rad = int(radius + 3)                 #hole radius
+
+        #set hole coordinates to publish
+        self.hole_pose.position.x = self.hole_X
+        self.hole_pose.position.y = self.hole_Y
+
+        #publish hole position
+        self.hole_pose_pub.publish(self.hole_pose)
 
     def detect_ball(self, image):
         """
         Detects the ball using color thresholding
         """
-        '''
-        #THIS DOCSTRING CONTAINS CODE WHEN USING SAWYER HEAD CAMERA
-        #HANG ONTO THIS UNTIL WE HAVE THE GAME BOARD SET AND GOLF BALLS
-
-        self.rows = image.height            #get image size
-        self.cols = image.width
-
-        encoding = str(image.encoding)      #image data encoding
-
-        image_in = self.bridge.imgmsg_to_cv2(image, encoding)       #convert ROS image to cv2 image
-        image_HSV = cv2.cvtColor(image_in, cv2.COLOR_BGR2HSV)       #convert cv2 image to HSV space
-
-        #threshold HSV image per thresholds identified above
-        color_thresh = cv2.inRange(image_HSV, (self.H_range[0], self.S_range[0], self.V_range[0]),
-                                   (self.H_range[1], self.S_range[1], self.V_range[1]))
-
-        #Gaussian blur
-        blur = cv2.GaussianBlur(color_thresh, (5, 5), 0)
-
-        #find contours in blurred image
-        image_cont, contours, hierarchy = cv2.findContours(blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
-        #find smallest circles enclosing identified contours
-        circles = []                                                #empty list to hold circle parameters
-        for i in range(len(contours)):                              #draw circles for all contours
-            (x, y), radius = cv2.minEnclosingCircle(contours[i])    #minimum enclosing circle for contour
-            centerX = int(x)                                        #center X coordinate
-            centerY = int(y)                                        #center Y coordinate
-            radius = int(radius)                                    #radius
-            circle = ((centerX, centerY), radius)                   #tuple of circle parameters
-            circles.append(circle)                                  #add circle to list
-
-        for i in range(len(circles)):               #for all circles
-            if circles[i][1] > 15:                  #if circle radius is too large
-                pass                                #don't draw it
-            elif circles[i][1] < 15:                #if radius is not too large
-                circleImg = cv2.circle(image_in, (circles[i][0][0], circles[i][0][1]), #draw the circle
-                                       circles[i][1], (0, 0, 255), 2)
-
-        image_out = self.bridge.cv2_to_imgmsg(circleImg, encoding)  #convert cv2 image to ROS image
-
-        self.image_pub.publish(image_out)           #publish image
-        '''
-
-        #CODE USING WEBCAM BELOW
+        
         #read webcam image
         ret, img_in = self.capture.read()
 
@@ -99,35 +112,45 @@ class DetectBall(object):
         img_hsv = cv2.cvtColor(img_in, cv2.COLOR_BGR2HSV)
 
         #color thresholding
-        img_threshold = cv2.inRange(img_hsv, (self.H_range[0], self.S_range[0], self.V_range[0]),
-                                    (self.H_range[1], self.S_range[1], self.V_range[1]))
+        img_threshold = cv2.inRange(img_hsv,
+                                    (self.ball_H_range[0], self.ball_S_range[0],
+                                     self.ball_V_range[0]),
+                                    (self.ball_H_range[1], self.ball_S_range[1],
+                                     self.ball_V_range[1]))
 
         #Gaussian blur
         blur = cv2.GaussianBlur(img_threshold, (5, 5), 0)
 
         #find contours in blurred image
-        image, contours, hierarchy = cv2.findContours(blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        image, contours, hierarchy = cv2.findContours(blur, cv2.RETR_EXTERNAL,
+                                                      cv2.CHAIN_APPROX_NONE)
 
-        #find smallest circles enclosing found contours
-        circles = []                                                #empty list to hold circle parameters
-        for i in range(len(contours)):                              #all contours
-            (x, y), radius = cv2.minEnclosingCircle(contours[i])    #smallest enclosing circle
-            centerX = int(x)                                        #center X coordinate
-            centerY = int(y)                                        #center Y coordinate
-            radius = int(radius)                                    #radius
-            circle = ((centerX, centerY), radius)                   #tuple of circle parameters
-            circles.append(circle)                                  #add circle to list
+        #isolate largest contour (should be the ball)
+        biggest_contour = max(contours, key=cv2.contourArea)
 
-        for i in range(len(circles)):                               #for all circles
-            if circles[i][1] > 75:                                  #if circle radius is too large
-                pass                                                #don't draw it
-            elif circles[i][1] < 75:                                #if radius is not too large
-                img_circles = cv2.circle(img_in, (circles[i][0][0], circles[i][0][1]),  #draw the circle
-                                         circles[i][1], (0, 0, 255), 2)
+        #find smallest circles enclosing biggest contour
+        (x, y), radius = cv2.minEnclosingCircle(biggest_contour)    #smallest enclosing circle
+        centerX = int(x)                                            #center X coordinate
+        centerY = int(y)                                            #center Y coordinate
+        radius = int(radius)                                        #radius
 
-        img_out = self.bridge.cv2_to_imgmsg(img_circles, "bgr8")    #convert cv2 image to ROS image
+        #draw circles on image at ball and hole locations
+        img_circle = cv2.circle(img_in, (centerX, centerY), radius, (0, 0, 255), 2)
+        img_circle = cv2.circle(img_in, (self.hole_X, self.hole_Y), self.hole_rad,
+                                (51, 255, 255), 2)
 
-        self.image_pub.publish(img_out)                             #publish image
+        #convert cv2 image to ROS image
+        img_out = self.bridge.cv2_to_imgmsg(img_circle, "bgr8")
+
+        #publish image for display
+        self.image_pub.publish(img_out)
+
+        #ball x- and y- coordinates
+        self.ball_pose.position.x = centerX
+        self.ball_pose.position.y = centerY
+
+        #publish ball position
+        self.ball_pose_pub.publish(self.ball_pose)
 
 def main():
     """
