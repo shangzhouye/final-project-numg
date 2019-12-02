@@ -7,6 +7,7 @@ import numpy as np
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Pose
 from cv_bridge import CvBridge #CvBridgeError
+from mini_golf.srv import CV_POIs, CV_POIsResponse
 import cv2
 
 class DetectBall(object):
@@ -56,6 +57,15 @@ class DetectBall(object):
         rospy.Subscriber('/io/internal_camera/head_camera/image_rect_color', Image,
                          self.detect_ball)
         rospy.loginfo("Subscriber initialized.")
+
+        #initialize service
+        self.serv = rospy.Service('get_pois', CV_POIs, self.serv_callback)
+
+    def serv_callback(self, req):
+        resp = CV_POIsResponse()
+        resp.ball_pose = self.ball_pose
+        resp.hole_pose = self.hole_pose
+        return resp
 
     def find_hole(self):
         """
