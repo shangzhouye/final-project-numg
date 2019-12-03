@@ -28,19 +28,19 @@ class HitTheBall(object):
 	
 	def plan_path(self):
 		self.waypoints = []
-		wpose = self.move_group.get_current_pose().pose
-		wpose.position.z -= scale*0.1
-		wpose.position.y += scale*0.1
-		self.waypoints.append(copy.deepcopy(wpose))
+		self.wpose = self.move_group.get_current_pose().pose
+		self.wpose.position.z += 1*0.1
+		self.wpose.position.y -= 1*0.1
+		self.waypoints.append(copy.deepcopy(self.wpose))
 		
 
-		wpose.position.x += scale*0.1
-		waypoints.append(copy.deepcopy(wpose))
+		self.wpose.position.x += 1*0.1
+		self.waypoints.append(copy.deepcopy(self.wpose))
 	
-		wpose.position.y -= scale * 0.1 
-		waypoints.append(copy.deepcopy(wpose))
+		self.wpose.position.y -= 1* 0.1 
+		self.waypoints.append(copy.deepcopy(self.wpose))
 		
-		(plan,fraction) = self.move_group.compute_cartesian_path(waypoints,0.01,0.0)
+		(plan,fraction) = self.move_group.compute_cartesian_path(self.waypoints,0.01,0.0)
 		return plan, fraction
 
 	def execute_plan(self,plan):
@@ -48,14 +48,15 @@ class HitTheBall(object):
 
 if __name__ == '__main__':
     moveit_commander.roscpp_initialize(sys.argv)
-    rospy.init_node('HitTheBall', anonymous=True, log_level=rospy.DEBUG)
+    rospy.init_node('hit_ball', anonymous=True, log_level=rospy.DEBUG)
     my_putter = HitTheBall()
+
     rospy.loginfo(my_putter.current_state())
 
 
     #position, orientation = my_sawyer.get_start_pose([0.63,-0.34,0.07],[0.68,0.27,0.07])
     plan , fraction = my_putter.plan_path()	   
-    rospy.loginfo('The orientation is: %s', orientation)
+    #rospy.loginfo('The current pose is: %s', current_state())
 
     my_putter.execute_plan(plan)
     rospy.spin()

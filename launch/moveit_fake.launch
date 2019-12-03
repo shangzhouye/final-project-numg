@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- set to true if running simulation -->
+  <arg name="if_sim" default='true'/>
+
+
+  <!-- Launch gazebo and spawn sawyer robot -->
+  <group if="$(arg if_sim)">
+    <include file="$(find sawyer_gazebo)/launch/sawyer_world.launch">
+ 	<arg name="electric_gripper" value="true"/>
+    </include>
+  </group>
+
+  <!-- Enable the robot and start the joint trajectory controller -->
+  <node name="enable_robot" pkg="intera_interface" type="enable_robot.py" args="-e" />
+  <node name="joint_trajectory_action_server" pkg="intera_interface" type="joint_trajectory_action_server.py" />
+
+  <!-- Launch sawyer moveit rviz -->
+  <!-- Modified MoveGroupExecuteService to MoveGroupExecuteTrajectoryAction in move_group.launch -->
+  <include file="$(find mini_golf)/launch/sawyer_moveit.launch">
+      <arg name="electric_gripper" value="true"/>
+  </include>
+
+  <!-- Launch move_group_python_interface -->
+  <node name="c" pkg="mini_golf" type="hit_ball" output="screen">
+    <remap from="joint_states" to="robot/joint_states"/>
+  </node>
+
+</launch>
