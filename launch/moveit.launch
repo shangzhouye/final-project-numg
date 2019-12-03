@@ -4,10 +4,10 @@
   <!-- set to true if running simulation -->
   <arg name="if_sim" default='true'/>
 
-
   <!-- Launch gazebo and spawn sawyer robot -->
   <group if="$(arg if_sim)">
     <include file="$(find sawyer_gazebo)/launch/sawyer_world.launch">
+      <arg name="electric_gripper" value="true"/>
     </include>
   </group>
 
