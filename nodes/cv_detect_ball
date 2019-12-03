@@ -110,11 +110,11 @@ class DetectBall(object):
         #publish hole position
         self.hole_pose_pub.publish(self.hole_pose)
 
-    def detect_ball(self, image):
+    def detect_ball(self):
         """
         Detects the ball using color thresholding
         """
-        
+
         #read webcam image
         ret, img_in = self.capture.read()
 
@@ -136,18 +136,29 @@ class DetectBall(object):
                                                       cv2.CHAIN_APPROX_NONE)
 
         #isolate largest contour (should be the ball)
-        biggest_contour = max(contours, key=cv2.contourArea)
+        if len(contours) > 0:
+            biggest_contour = max(contours, key=cv2.contourArea)
 
-        #find smallest circles enclosing biggest contour
-        (x, y), radius = cv2.minEnclosingCircle(biggest_contour)    #smallest enclosing circle
-        centerX = int(x)                                            #center X coordinate
-        centerY = int(y)                                            #center Y coordinate
-        radius = int(radius)                                        #radius
+            #find smallest circles enclosing biggest contour
+            (x, y), radius = cv2.minEnclosingCircle(biggest_contour)    #smallest enclosing circle
+            centerX = int(x)                                            #center X coordinate
+            centerY = int(y)                                            #center Y coordinate
+            radius = int(radius)                                        #radius
 
-        #draw circles on image at ball and hole locations
-        img_circle = cv2.circle(img_in, (centerX, centerY), radius, (0, 0, 255), 2)
-        img_circle = cv2.circle(img_in, (self.hole_X, self.hole_Y), self.hole_rad,
-                                (51, 255, 255), 2)
+            #draw circles on image at ball and hole locations
+            img_circle = cv2.circle(img_in, (centerX, centerY), radius, (0, 0, 255), 2)
+            img_circle = cv2.circle(img_in, (self.hole_X, self.hole_Y), self.hole_rad,
+                                    (51, 255, 255), 2)
+
+            #ball x- and y- coordinates
+            self.ball_pose.position.x = centerX
+            self.ball_pose.position.y = centerY
+
+            #publish ball position
+            self.ball_pose_pub.publish(self.ball_pose)
+            
+        elif len(contours) == 0:
+            img_circle = img_in
 
         #convert cv2 image to ROS image
         img_out = self.bridge.cv2_to_imgmsg(img_circle, "bgr8")
@@ -155,21 +166,16 @@ class DetectBall(object):
         #publish image for display
         self.image_pub.publish(img_out)
 
-        #ball x- and y- coordinates
-        self.ball_pose.position.x = centerX
-        self.ball_pose.position.y = centerY
 
-        #publish ball position
-        self.ball_pose_pub.publish(self.ball_pose)
 
 def main():
     """
     Main function; initializes the node and calls the DetectBall class
     """
     rospy.loginfo("Beginning Ball Detection...")            #console output message
-    DetectBall()
+    det = DetectBall()
     while not rospy.is_shutdown():
-        pass
+        det.detect_ball()
 
 if __name__ == '__main__':
     rospy.init_node('cv_detect_ball')                       #initialize node
