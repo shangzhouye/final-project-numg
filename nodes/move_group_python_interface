@@ -79,6 +79,10 @@ class MoveGroupPythonInterface(object):
 
         self.move_group.set_pose_target(pose_goal)
 
+        # change the max velocity and acceleratin factor before execution
+        self.move_group.set_max_velocity_scaling_factor(1.0)
+        self.move_group.set_max_acceleration_scaling_factor(1.0)
+
         # try to find the solution for five times
         for i in range(5):
 
