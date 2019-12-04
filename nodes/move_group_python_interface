@@ -93,7 +93,7 @@ class MoveGroupPythonInterface(object):
                 self.move_group.clear_pose_targets()
                 return True
             else:
-                rospy.logdebug('Fail to find solution: trial %s', i)
+                rospy.logdebug('Fail to find solution: trial %s', i+1)
         
         return False
 
