@@ -42,7 +42,13 @@ class DetectBall(object):
 
         self.bridge = CvBridge()            #converts between ROS and cv2 image
 
-        self.capture = cv2.VideoCapture(0)  #capture from webcam
+        self.capture = cv2.VideoCapture(2)  #capture from webcam
+        '''
+        IMPORTANT!!!
+        On Riley's computer, use argument 0 for attached camera, use 2 for laptop webcam.
+        I don't know why this is but roll with it. Might be different on other people's computers,
+        if the image isn't showing up in ImageViewer try using the other argument.
+        '''
 
         #initialize publishers
         self.image_pub = rospy.Publisher('/sawyer_image_out', Image, queue_size=1)
@@ -156,7 +162,7 @@ class DetectBall(object):
 
             #publish ball position
             self.ball_pose_pub.publish(self.ball_pose)
-            
+
         elif len(contours) == 0:
             img_circle = img_in
 
@@ -165,8 +171,6 @@ class DetectBall(object):
 
         #publish image for display
         self.image_pub.publish(img_out)
-
-
 
 def main():
     """
