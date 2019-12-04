@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+import rospy
+import cv2
+
+class CameraCallib():
+	def __init__(self):
+		rospy.loginfo("hello world")
+		self.sawyer_cam_props = rospy.get_param("/sawyer_cam")
+		self.overhead_cam_props = rospy.get_param("/overhead_cam")
+		# rospy.Service("/get_cam_param", bool, )
+
+if __name__ == '__main__':
+	CameraCallib()
+
