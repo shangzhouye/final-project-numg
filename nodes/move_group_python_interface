@@ -79,14 +79,23 @@ class MoveGroupPythonInterface(object):
 
         self.move_group.set_pose_target(pose_goal)
 
-        plan = self.move_group.go(wait=True)
+        # change the max velocity and acceleratin factor before execution
+        self.move_group.set_max_velocity_scaling_factor(1.0)
+        self.move_group.set_max_acceleration_scaling_factor(1.0)
 
-        # Calling `stop()` ensures that there is no residual movement
-        self.move_group.stop()
+        # try to find the solution for five times
+        for i in range(5):
 
-        # It is always good to clear your targets after planning with poses.
-        # Note: there is no equivalent function for clear_joint_value_targets()
-        self.move_group.clear_pose_targets()
+            plan = self.move_group.go(wait=True)
+
+            if plan == True:
+                self.move_group.stop()
+                self.move_group.clear_pose_targets()
+                return True
+            else:
+                rospy.logdebug('Fail to find solution: trial %s', i+1)
+        
+        return False
 
 
 
@@ -213,6 +222,6 @@ if __name__ == '__main__':
     rospy.logdebug('The orientation is: %s', orientation)
 
     # go to starting pose
-    my_sawyer.go_to_pose(position,orientation)
+    if_success = my_sawyer.go_to_pose(position,orientation)
 
     rospy.spin()
