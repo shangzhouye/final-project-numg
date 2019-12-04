@@ -8,10 +8,11 @@ project(mini_golf)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  rospy
   geometry_msgs
   message_generation
   message_runtime
+  rospy
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -70,8 +71,8 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
   geometry_msgs
+  std_msgs
 )
 
 ################################################
@@ -106,7 +107,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mini_golf
-#  CATKIN_DEPENDS rospy
+  CATKIN_DEPENDS geometry_msgs message_runtime rospy std_msgs 
 #  DEPENDS system_lib
 )
 
@@ -161,7 +162,10 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
-  scripts/cv_detect_ball
+  nodes/cv_detect_ball
+  nodes/game_planner
+  nodes/move_group_python_interface
+  sawyer_setup.bash
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
