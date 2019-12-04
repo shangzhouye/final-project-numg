@@ -1,0 +1,22 @@
+#these are dummy values from my computer webcam for rn 
+overhead_cam:
+  image_width: 640
+  image_height: 480
+  camera_name: overhead_cam
+  camera_matrix:
+    rows: 3
+    cols: 3
+    data: [563.831203, 0.000000, 343.858392, 0.000000, 557.978103, 233.511242, 0.000000, 0.000000, 1.000000]
+  distortion_model: plumb_bob
+  distortion_coefficients:
+    rows: 1
+    cols: 5
+    data: [-0.159141, 0.147298, 0.007762, -0.000920, 0.000000]
+  rectification_matrix:
+    rows: 3
+    cols: 3
+    data: [1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000]
+  projection_matrix:
+    rows: 3
+    cols: 4
+    data: [544.630249, 0.000000, 343.604608, 0.000000, 0.000000, 543.934875, 235.882020, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000]
