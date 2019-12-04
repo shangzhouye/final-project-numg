@@ -1,0 +1,3 @@
+- git:
+    local-name: src/sawyer_moveit
+    uri: git@github.com:shangzhouye/sawyer_moveit.git
