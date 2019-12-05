@@ -3,6 +3,7 @@ import rospy
 from mini_golf.srv import CV_POIs, CV_POIsResponse, CamCal, CamCalResponse
 from geometry_msgs.msg import Transform
 
+
 class GamePlanner(object):
 	def __init__(self):
 
@@ -11,8 +12,8 @@ class GamePlanner(object):
 		#establish publishers
 
 		#establish service proxies 
-		# self.get_camera_cal = rospy.ServiceProxy('/get_camera_cal', CamCal)
-		# self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
+		self.get_camera_cal = rospy.ServiceProxy('/get_camera_cal', CamCal)
+		self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
 		self.setup()
 
 		#set initial state
