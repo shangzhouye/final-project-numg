@@ -23,6 +23,7 @@ from std_msgs.msg import String
 from moveit_commander.conversions import pose_to_list
 import numpy as np
 from tf.transformations import quaternion_from_euler
+from moveit_msgs.msg import RobotState, Constraints, JointConstraint
 
 class MoveGroupPythonInterface(object):
     ''' Integrate the functions we need for the mini-golf project as python interface '''
@@ -84,7 +85,7 @@ class MoveGroupPythonInterface(object):
         self.move_group.set_max_acceleration_scaling_factor(1.0)
 
         # try to find the solution for five times
-        for i in range(5):
+        for i in range(10):
 
             plan = self.move_group.go(wait=True)
 
@@ -149,7 +150,7 @@ class MoveGroupPythonInterface(object):
         return position, orientation
 
 
-    def add_table(self, x_offset=0.6, z_height=0.02):
+    def add_table(self, x_offset=0.6, z_height=-0.5):
         ''' Add table to the planning scene 
         
         Args:
@@ -160,7 +161,7 @@ class MoveGroupPythonInterface(object):
         table_pose.header.frame_id = "world"
         table_pose.pose.orientation.w = 1.0
         table_pose.pose.position.x = x_offset
-        table_pose.pose.position.z = z_height - 0.05
+        table_pose.pose.position.z = z_height - 0.025
         table_name = "table"
         table_size = (0.6096, 1.2192, 0.05)
         self.scene.add_box(table_name, table_pose, size=table_size)
@@ -201,6 +202,21 @@ class MoveGroupPythonInterface(object):
 
         return False
 
+    def init_path_constraints(self):
+        self.constraints = Constraints()
+        joint_constraint = JointConstraint()
+
+        self.constraints.name = "align_joint5"
+
+        joint_constraint.position = 3.14/2
+        joint_constraint.tolerance_above = 0.1
+        joint_constraint.tolerance_below = 0.3
+        joint_constraint.weight = 1
+
+        joint_constraint.joint_name = "right_j6"
+        self.constraints.joint_constraints.append(joint_constraint)
+
+        self.move_group.set_path_constraints(self.constraints)
 
 
 if __name__ == '__main__':
@@ -217,8 +233,11 @@ if __name__ == '__main__':
     my_sawyer.add_table()
     my_sawyer.add_putter()
 
+    # setup the constraint
+    my_sawyer.init_path_constraints()
+
     # calculaete starting pose
-    position, orientation = my_sawyer.get_start_pose([0.63,-0.34,0.07],[0.68,0.27,0.07])
+    position, orientation = my_sawyer.get_start_pose([0.736,0.432,-0.44],[0.5,0.305,-0.44])
     rospy.logdebug('The orientation is: %s', orientation)
 
     # go to starting pose
