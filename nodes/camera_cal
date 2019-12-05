@@ -1,55 +1,74 @@
 #!/usr/bin/env python
+
 import rospy
+import numpy as np
 import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
-class CameraCallib():
-	def __init__(self):
-		rospy.loginfo("hello world")
-		self.sawyer_cam_matrix = rospy.get_param("/sawyer_cam/camera_matrix/data")
-		self.overhead_cam_matrix = rospy.get_param("/overhead_cam/camera_matrix/data")
-		self.sawyer_cam_distortion = rospy.get_param("/sawyer_cam/distortion_coefficients/data")
-		self.overhead_cam_distortion = rospy.get_param("/overhead_cam/distortion_coefficients/data")
+class CameraCallib(object):
+    def __init__(self):
+        rospy.loginfo("hello world")
+        self.sawyer_cam_matrix = np.reshape(np.asarray(rospy.get_param("/sawyer_cam/camera_matrix/data")), (3, 3))
+        self.overhead_cam_matrix = np.reshape(np.asarray(rospy.get_param("/overhead_cam/camera_matrix/data")), (3, 3))
+        self.sawyer_cam_distortion = np.reshape(np.asarray(rospy.get_param("/sawyer_cam/distortion_coefficients/data")), (5, 1))
+        self.overhead_cam_distortion = np.reshape(np.asarray(rospy.get_param("/overhead_cam/distortion_coefficients/data")), (5, 1))
 
-		self.killa = 0
-		self.killb = 0
+        self.killa = 0
+        self.killb = 0
 
-		rospy.Subscriber("/overhead_image_out", Image, self.overhead_cal_callback)
-		rospy.Subscriber("/sawyer_image_out", Image, self.sawyer_cal_callback)
+        rospy.Subscriber("/overhead_image_out", Image, self.overhead_cal_callback)
+        rospy.Subscriber("/sawyer_image_out", Image, self.sawyer_cal_callback)
 
-		self.bridge = CvBridge()
+        self.bridge = CvBridge()
 
-		self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, .001)
+        self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, .001)
 
-	# rospy.Service("/get_cam_param", bool, )
+        self.main()
 
-		self.main()
+    def construct_obj_pts(self):
+        objpts = np.zeros((48, 1, 3))
+        for i in range(48):
+            objpts[i][0] = np.array([.0254*i % (6 * 0.0254), 0.0254*np.floor(i/6), 0])
 
-	def overhead_cal_callback(self, data):
-		img = self.bridge.imgmsg_to_cv2(data, "bgr8")
-		gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-		ret_val, corners = cv2.findChessboardCorners(gray, (6,8),None)
-		if ret_val == True:
-			corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1), self.criteria)
-			rospy.loginfo("{}".format(corners2[0]))
-			self.killa = 1
+        return objpts
 
-	def sawyer_cal_callback(self, data):
-		img = self.bridge.imgmsg_to_cv2(data, "bgr8")
-		gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-		ret_val, corners = cv2.findChessboardCorners(gray, (6,8),None)
-		if ret_val == True:
-		    corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1), self.criteria)
+    def overhead_cal_callback(self, data):
+        img = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        ret_val, corners = cv2.findChessboardCorners(gray, (6, 8), None)
+        if ret_val == True:
+            corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), self.criteria)
+            overhead_objpts = self.construct_obj_pts()
+            #print(overhead_objpts)
+            ret, rvec, tvec, inliers = cv2.solvePnPRansac(overhead_objpts,
+                                                          corners2,
+                                                          self.overhead_cam_matrix,
+                                                          self.overhead_cam_distortion)
+            print(rvec, tvec)
+            self.killa = 1
 
-	    	self.killb = 1
+    def sawyer_cal_callback(self, data):
+        img = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        ret_val, corners = cv2.findChessboardCorners(gray, (6, 8), None)
+        if ret_val == True:
+            corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), self.criteria)
+            sawyer_objpts = self.construct_obj_pts()
 
-	def main(self):
-		rate = rospy.Rate(31)
-		while not rospy.is_shutdown() and not (self.killa and self.killb):
-			rate.sleep()
+            ret, rvec, tvec, inliers = cv2.solvePnPRansac(sawyer_objpts,
+                                                          corners2,
+                                                          self.sawyer_cam_matrix,
+                                                          self.sawyer_cam_distortion)
+
+            self.killb = 1
+
+    def main(self):
+        rate = rospy.Rate(31)
+        while not rospy.is_shutdown() and not (self.killa and self.killb):
+            rate.sleep()
 
 if __name__ == '__main__':
 
-	rospy.init_node("camera_cal")
-	CameraCallib()
+    rospy.init_node("camera_cal")
+    CameraCallib()
