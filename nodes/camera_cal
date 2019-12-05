@@ -37,6 +37,7 @@ class CameraCallib(object):
         img = self.bridge.imgmsg_to_cv2(data, "bgr8")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret_val, corners = cv2.findChessboardCorners(gray, (6, 8), None)
+        print(ret_val)
         if ret_val == True:
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), self.criteria)
             overhead_objpts = self.construct_obj_pts()
@@ -45,7 +46,13 @@ class CameraCallib(object):
                                                           corners2,
                                                           self.overhead_cam_matrix,
                                                           self.overhead_cam_distortion)
-            print(rvec, tvec)
+
+            r_mat, jac = cv2.Rodrigues(rvec)           #rotation matrix
+
+            print(r_mat)
+
+#            t_mat = np.hstack((r_mat, tvec))
+
             self.killa = 1
 
     def sawyer_cal_callback(self, data):

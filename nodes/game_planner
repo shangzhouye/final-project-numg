@@ -1,23 +1,36 @@
-#!/usr/env/bin python 
+#!/usr/bin/env python 
 import rospy 
-from smach_ros import SimpleActionState
-from mini_golf.srv import CV_POIs, CV_POIsResponse
+from mini_golf.srv import CV_POIs, CV_POIsResponse, CamCal, CamCalResponse
+from geometry_msgs.msg import Transform
 
 class GamePlanner(object):
 	def __init__(self):
+
 		#perform subscriptiosn
 
 		#establish publishers
 
 		#establish service proxies 
-		self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
-		self.get_POIs()
+		# self.get_camera_cal = rospy.ServiceProxy('/get_camera_cal', CamCal)
+		# self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
+		self.setup()
 
 		#set initial state
 		self.state = 'uninitialized'
 
-	def loop(self):
+	def setup(self):
+		cam_cal_resp = CamCalResponse()
+		cv_pois_resp = CV_POIsResponse()
+		rospy.loginfo("printing cam cal resp")
+		rospy.loginfo(cam_cal_resp)
+		rospy.loginfo("printing cv pois resp")
+		rospy.loginfo(cv_pois_resp)
 
+
+	def loop(self):
+		rate = rospy.Rate(31)
+		while not rospy.is_shutdown():
+			rate.sleep()
 
 
 

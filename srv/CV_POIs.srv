@@ -1,6 +1,6 @@
 #takes None
 
 ---
-#returns turtle_vel
+#returns Pose of ball and hole
 geometry_msgs/Pose ball_pos
 geometry_msgs/Pose hole_pos
