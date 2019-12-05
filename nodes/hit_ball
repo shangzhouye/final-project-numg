@@ -22,13 +22,12 @@ class HitTheBall(object):
 		self.scene = moveit_commander.PlanningSceneInterface()
 		self.group_name = "right_arm"
 		self.move_group = moveit_commander.MoveGroupCommander(self.group_name)
-		#self.display_trajectory_publisher = rospy.Publisher('/move_group display_planned_path',moveit_msgs.msg.DisplayTrajectory,queue_size=20)
-		self.eef_link = self.move_group.get_end_effector_link()
-        	rospy.logdebug('End effector link: %s', self.eef_link)
+		self.display_trajectory_publisher = rospy.Publisher('/move_group display_planned_path',moveit_msgs.msg.DisplayTrajectory,queue_size=20)
 		self.move_group.set_max_velocity_scaling_factor(1.0)
         	self.move_group.set_max_acceleration_scaling_factor(1.0)
-
-	def ball_pos_to_sawyer(self,ball_pos,hole_pos):
+	
+	### Finding the x-y coordinates for the forward motion ###
+	def ball_pos_to_sawyer(self,ball_pos):
 		ball_x = ball_pos[0]
 		ball_y = ball_pos[1]
 		self.wpose = self.move_group.get_current_pose().pose
@@ -36,50 +35,17 @@ class HitTheBall(object):
 		ef_y = self.wpose.position.y
 		dir_x = ball_x -ef_x
 		dir_y = ball_y -ef_y
-		z_s = pos_ball[2] + 0.2
-
-		# get the vector pointing from the hole to the ball
-		v_h2b = (np.array(pos_ball) - np.array(pos_hole))[:2]
-
-		# normalize the vector
-		v_h2b_norm = np.linalg.norm(v_h2b)
-		v_h2b = v_h2b / v_h2b_norm
-		
-		# compute x_s, y_s
-		x_s = pos_ball[0] + (v_h2b * distance)[0]
-		y_s = pos_ball[1] + (v_h2b * distance)[1]
-
-		position =  [x_s, y_s, z_s]
-
-		#### Orientation ####
-
-		# get the angle in xy plane from the vector
-		# v_h2b is point from the hole to the ball
-		# we need the vector pointing from the ball to the hole
-		angle_xy_plane = math.atan2(-v_h2b[1], -v_h2b[0])
-
-		# convert it to euler angle
-		euler_yaw = angle_xy_plane
-		euler_pitch = pi
-		euler_roll = 0
-
-		# convert it to quaternion
-		quaternion = quaternion_from_euler(euler_roll, euler_pitch, euler_yaw)
-		orientation = [quaternion[0],quaternion[1],quaternion[2],quaternion[3]]
-		hit_direction = [position,orientation]
-		#hit_direction = [dir_x,dir_y]
+		hit_direction = [dir_x,dir_y]
 		return hit_direction
 
-
+	### checks the current state of the robot###
 	def current_state(self):
 		current_state = self.robot.get_current_state() 
 		return current_state
-	
+	### planning a path and then executing it###
 	def plan_path(self,hit_direction):
 		self.waypoints = []
 		self.wpose = self.move_group.get_current_pose().pose
-		#self.wpose.position.x += 3*0.1
-		#self.wpose.position.y -= 1*0.1
 		if self.wpose.position.y < -0.3 and self.wpose.position.x<=0.4:
 			joint_goal = self.move_group.get_current_joint_values()
 			joint_goal[0]= joint_goal[0]
@@ -98,7 +64,9 @@ class HitTheBall(object):
 			joint_goal[4]= joint_goal[4]
 			joint_goal[5]= joint_goal[5] + np.pi
 			joint_goal[6] = joint_goal[6]
-		if self.wpose.position.y < -0.3 and self.wpose.position.x>0.4:
+			self.move_group.go(joint_goal, wait=True)
+		
+		elif self.wpose.position.y < -0.3 and self.wpose.position.x>0.5:
 			self.wpose.position.x += hit_direction.position.x
 			self.wpose.position.y += hit_direction.position.y
 			self.wpose.position.z += hit_direction.position.z
@@ -110,25 +78,12 @@ class HitTheBall(object):
 			(plan,fraction) = self.move_group.compute_cartesian_path(self.waypoints,0.01,0.0)
 			self.move_group.execute(plan,wait=True)
 		else:		
-			self.wpose.position.x += hit_direction[0]*0.5#1*0.1
-			self.wpose.position.y += hit_direction[1]*0.5#1*0.1
+			self.wpose.position.x += hit_direction[0]*0.5
+			self.wpose.position.y += hit_direction[1]*0.5
 			self.waypoints.append(copy.deepcopy(self.wpose))
 			(plan,fraction) = self.move_group.compute_cartesian_path(self.waypoints,0.01,0.0)
 			self.move_group.execute(plan,wait=True)
-
-		
-		
-		#self.wpose.position.x += 1*0.1
-		#self.waypoints.append(copy.deepcopy(self.wpose))
-	
-		#self.wpose.position.y -= 1* 0.1 
-		#self.waypoints.append(copy.deepcopy(self.wpose))
-		
-			
-		#return plan, fraction
-
-	def execute_plan(self,plan):
-		self.move_group.execute(plan,wait=True)
+		return plan, fraction
 
 if __name__ == '__main__':
     moveit_commander.roscpp_initialize(sys.argv)
@@ -136,55 +91,7 @@ if __name__ == '__main__':
     my_putter = HitTheBall()
 	
     rospy.loginfo(my_putter.current_state())
-    hit_direction= my_putter.ball_pos_to_sawyer([0.7,-0.355,-0.44],[0.736,0.432,-0.44]) #ball hole
+    hit_direction= my_putter.ball_pos_to_sawyer([0.39,-0.355,-0.44])
     my_putter.plan_path(hit_direction)
-    #vector_pos = my_putter.qua_to_rot_axis()
-    #plan , fraction = my_putter.plan_path(hit_direction) #(hit_direction)	   
-    #rospy.loginfo('The current pose is: %s', current_state())
-    #my_putter.execute_plan(plan)
     rospy.spin()
-
-
-"""
-	def qua_to_rot_axis(self):
-		self.wpose = self.move_group.get_current_pose().pose
-		self.ddrive_loc = self.ddrive_state(self.model,"")
-		self.angle_x = self.wpose.orientation.x
-		self.angle_y = self.wpose.orientation.y
-		self.angle_z = self.wpose.orientation.z
-		self.angle_w = self.wpose.orientation.w
-		self.orientation_list = [self.angle_x,self.angle_y,self.angle_z,self.angle_w]
-		(self.roll,self.pitch,self.yaw) = euler_from_quaternion(self.orientation_list)
-
-		yawMatrix = np.array([[np.cos(self.yaw), -np.sin(self.yaw), 0],[np.sin(self.yaw), np.cos(self.yaw), 0],[0, 0, 1]])
-
-		pitchMatrix = np.array([[np.cos(self.pitch), 0, np.sin(self.pitch)],[0, 1, 0],[-np.sin(self.pitch), 0, np.cos(pitch)]])
-
-		rollMatrix = np.array([[1, 0, 0],[0, np.cos(self.roll), -np.sin(self.roll)],[0, np.sin(self.roll), np.cos(self.roll)]])
-
-		R = yawMatrix * pitchMatrix * rollMatrix
-
-		theta = np.acos(((R[0, 0] + R[1, 1] + R[2, 2]) - 1) / 2)
-		multi = 1 / (2 * np.sin(theta))
-
-		rx = multi * (R[2, 1] - R[1, 2]) * theta
-		ry = multi * (R[0, 2] - R[2, 0]) * theta
-		rz = multi * (R[1, 0] - R[0, 1]) * theta
-		vector_pos = [self.rx, self.ry, self.rz]
-		return vector_pos
-"""
-
-"""	
-	def ball_pos_to_sawyer(self,ball_pos):
-		ball_x = ball_pos[0]
-		ball_y = ball_pos[1]
-		self.wpose = self.move_group.get_current_pose().pose
-		ef_x = self.wpose.position.x
-		ef_x = self.wpose.position.y
-		dir_x = ball_x -ef_x
-		dir_y = ball_y -ef_y
-		hit_direction = [dir_x,dir_y]
-		return hit_direction
-#ball_angle = math.atan2(ball_x,ball_y)
-"""	
 		
