@@ -4,15 +4,13 @@ import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
-
 class CameraCallib():
 	def __init__(self):
 		rospy.loginfo("hello world")
 		self.sawyer_cam_matrix = rospy.get_param("/sawyer_cam/camera_matrix/data")
 		self.overhead_cam_matrix = rospy.get_param("/overhead_cam/camera_matrix/data")
-		self.sawyer_cam_distortion = rospy.get_param("/sawyer_cam/distortion/data")
-		self.overhead_cam_distortion = rospy.get_param("/overhead_cam/distortion/data")
-
+		self.sawyer_cam_distortion = rospy.get_param("/sawyer_cam/distortion_coefficients/data")
+		self.overhead_cam_distortion = rospy.get_param("/overhead_cam/distortion_coefficients/data")
 
 		self.killa = 0
 		self.killb = 0
@@ -22,7 +20,9 @@ class CameraCallib():
 
 		self.bridge = CvBridge()
 
-		# rospy.Service("/get_cam_param", bool, )
+		self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, .001)
+
+	# rospy.Service("/get_cam_param", bool, )
 
 		self.main()
 
@@ -30,30 +30,26 @@ class CameraCallib():
 		img = self.bridge.imgmsg_to_cv2(data, "bgr8")
 		gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 		ret_val, corners = cv2.findChessboardCorners(gray, (6,8),None)
-		if ret == True:
-		    corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
-		    rospy.loginfo("{}".format(corners2.shape))
-		    self.killa = 1
+		if ret_val == True:
+			corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1), self.criteria)
+			rospy.loginfo("{}".format(corners2.shape))
+			self.killa = 1
 
 	def sawyer_cal_callback(self, data):
 		img = self.bridge.imgmsg_to_cv2(data, "bgr8")
 		gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 		ret_val, corners = cv2.findChessboardCorners(gray, (6,8),None)
-		if ret == True:
-		    corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
+		if ret_val == True:
+		    corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1), self.criteria)
 
-
-
-		    self.killa = 1
+	    	self.killb = 1
 
 	def main(self):
-		
-
 		rate = rospy.Rate(31)
-		while not rospy.is_shutdown() and not (self.killa and self.killab):
+		while not rospy.is_shutdown() and not (self.killa and self.killb):
 			rate.sleep()
 
 if __name__ == '__main__':
+
 	rospy.init_node("camera_cal")
 	CameraCallib()
-

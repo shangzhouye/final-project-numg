@@ -42,7 +42,7 @@ class DetectBall(object):
 
         self.bridge = CvBridge()            #converts between ROS and cv2 image
 
-        self.capture = cv2.VideoCapture(2)  #capture from webcam
+        self.capture = cv2.VideoCapture(0)  #capture from webcam
         '''
         IMPORTANT!!!
         On Riley's computer, use argument 0 for attached camera, use 2 for laptop webcam.
@@ -51,7 +51,7 @@ class DetectBall(object):
         '''
 
         #initialize publishers
-        self.image_pub = rospy.Publisher('/sawyer_image_out', Image, queue_size=1)
+        self.image_pub = rospy.Publisher('/overhead_image_out', Image, queue_size=1)
         self.ball_pose_pub = rospy.Publisher('/ball_pose', Pose, queue_size=10)
         self.hole_pose_pub = rospy.Publisher('/hole_pose', Pose, queue_size=10)
         rospy.loginfo("Publishers initialized.")

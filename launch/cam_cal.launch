@@ -2,6 +2,5 @@
 <launch>
 	<rosparam command="load" file="$(find mini_golf)/config/overhead_cam.yaml"/>
 	<rosparam command="load" file="$(find mini_golf)/config/sawyer_cam.yaml"/>
-	<node pkg="mini_golf" type="camera_cal" name="camera_cal"/> 
-
+	<!-- <node pkg="mini_golf" type="camera_cal" name="camera_cal"/> -->
 </launch>
