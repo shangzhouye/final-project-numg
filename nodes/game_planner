@@ -1,10 +1,17 @@
 #!/usr/env/bin python 
 import rospy 
+import smach
+from smach import StateMachine
 from smach_ros import SimpleActionState
 from mini_golf.srv import CV_POIs, CV_POIsResponse
 
 class GamePlanner(object):
 	def __init__(self):
+		#establish state machine
+		self.sm = StateMachine(outcomes=['outcome1', 'outcome2'],
+							   input_keys=['input1', 'input2'],
+							   output_keys=['output1','output2'])
+
 		#perform subscriptiosn
 
 		#establish publishers
