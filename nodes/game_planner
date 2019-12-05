@@ -1,12 +1,17 @@
 #!/usr/env/bin python 
 import rospy 
-import actionlib
+from smach_ros import SimpleActionState
+from mini_golf.srv import CV_POIs, CV_POIsResponse
 
 class GamePlanner(object):
 	def __init__(self):
 		#perform subscriptiosn
 
 		#establish publishers
+
+		#establish service proxies 
+		self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
+		self.get_POIs()
 
 		#set initial state
 		self.state = 'uninitialized'
