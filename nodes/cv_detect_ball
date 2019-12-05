@@ -164,7 +164,8 @@ class DetectBall(object):
             self.ball_pose_pub.publish(self.ball_pose)
 
         elif len(contours) == 0:
-            img_circle = img_in
+            img_circle = cv2.circle(img_in, (self.hole_X, self.hole_Y), self.hole_rad,
+                                    (51, 255, 255), 2)
 
         #convert cv2 image to ROS image
         img_out = self.bridge.cv2_to_imgmsg(img_circle, "bgr8")

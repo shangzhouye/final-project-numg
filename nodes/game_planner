@@ -2,6 +2,8 @@
 import rospy 
 from mini_golf.srv import CV_POIs, CV_POIsResponse, CamCal, CamCalResponse
 from geometry_msgs.msg import Transform
+import numpy as np
+from tf.transformations import quaternion_matrix
 
 
 class GamePlanner(object):
@@ -15,12 +17,32 @@ class GamePlanner(object):
 		self.get_camera_cal = rospy.ServiceProxy('/get_camera_cal', CamCal)
 		self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
 		self.setup()
-
+		self.loop()
 		#set initial state
 		self.state = 'uninitialized'
 
 	def setup(self):
-		cam_cal_resp = CamCalResponse()
+		cam_cal_resp = self.get_camera_cal()
+		sawyer_trans = cam_cal_resp.sawyer_transform
+		overhead_trans = cam_cal_resp.overhead_transform
+		
+		R_sawyer_cw = np.array([sawyer_trans.rotation.x,sawyer_trans.rotation.y,sawyer_trans.rotation.z,sawyer_trans.rotation.w])		
+		R_overhead_cw = np.array([overhead_trans.rotation.x,overhead_trans.rotation.y,overhead_trans.rotation.z,overhead_trans.rotation.w])		
+		
+		p_sawyer_cw = np.array([sawyer_trans.translation.x, sawyer_trans.translation.y, sawyer_trans.translation.z, 1])
+		p_overhead_cw = np.array([overhead_trans.translation.x, overhead_trans.translation.y, overhead_trans.translation.z, 1])
+
+		T_overhead_cw = np.zeros((4,4))
+		T_sawyer_cw = np.zeros((4,4))
+		T_overhead_cw[0:3,0:3] = R_overhead_cw
+		T_sawyer_cw[0:3,0:3] = R_sawyer_cw
+		T_overhead_cw[:,-1] =  p_overhead_cw
+		T_sawyer_cw[:,-1] =  p_sawyer_cw_cw
+
+		# pois_in_cam_frame = self.get_POIs()
+		# ball_pos_in_cam_frame = pois_in_cam_frame.ball_pos
+		# hole_pos_in_cam_frame = pois_in_cam_frame.hole_pos
+
 		cv_pois_resp = CV_POIsResponse()
 		rospy.loginfo("printing cam cal resp")
 		rospy.loginfo(cam_cal_resp)
