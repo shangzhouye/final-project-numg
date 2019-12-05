@@ -80,8 +80,8 @@ class MoveGroupPythonInterface(object):
         self.move_group.set_pose_target(pose_goal)
 
         # change the max velocity and acceleratin factor before execution
-        self.move_group.set_max_velocity_scaling_factor(0.5)
-        self.move_group.set_max_acceleration_scaling_factor(0.5)
+        self.move_group.set_max_velocity_scaling_factor(1.0)
+        self.move_group.set_max_acceleration_scaling_factor(1.0)
 
         # try to find the solution for five times
         for i in range(5):
@@ -149,7 +149,7 @@ class MoveGroupPythonInterface(object):
         return position, orientation
 
 
-    def add_table(self, x_offset=0.6, z_height=-0.50):
+    def add_table(self, x_offset=0.6, z_height=0.02):
         ''' Add table to the planning scene 
         
         Args:
@@ -200,21 +200,6 @@ class MoveGroupPythonInterface(object):
             seconds = rospy.get_time()
 
         return False
-    
-    def return_home(self):
-	joint_goal = self.move_group.get_current_joint_values()
-	joint_goal[0]=0.0
-	joint_goal[1]=0.0
-	joint_goal[2]=0.0
-	joint_goal[3]=np.pi/2
-	joint_goal[4]=0.0
-	joint_goal[5]=0.0
-	joint_goal[6] = -np.pi/2
-	print("seperation")
-	print(joint_goal)
-	self.move_group.go(joint_goal, wait=True)
-	#[-0.2295791015625, 1.1898857421875, -0.2348466796875, -2.1429931640625, -2.977087890625, -2.2255673828125, -1.4547744140625]
-	#self.move_group.stop()
 
 
 
@@ -232,54 +217,11 @@ if __name__ == '__main__':
     my_sawyer.add_table()
     my_sawyer.add_putter()
 
-    #name: [head_pan, right_j0, right_j1, right_j2, right_j3, right_j4, right_j5, right_j6, torso_t0]
-    #position: [0.1414794921875, -0.2295791015625, 1.1898857421875, -0.2348466796875, -2.1429931640625, -2.977087890625, -2.2255673828125, -1.4547744140625, 0.0]
-
-    #name: [right_j0, head_pan, right_j1, right_j2, right_j3, right_j4, right_j5, right_j6, right_gripper_l_finger_joint,
-    #right_gripper_r_finger_joint]
-    #position: [-0.947546875, 0.147466796875, -3.21740625, -2.97183984375, 1.694666015625, -2.426177734375, 0.2669013671875, -0.0843173828125, 0.041667, -0.041667]
-
-    #my_sawyer.return_home()
     # calculaete starting pose
-    position, orientation = my_sawyer.get_start_pose([0.736,0.432,-0.44],[0.7,-0.355,-0.44]) #([0.63,-0.34,0.07],[0.68,0.27,0.07])
+    position, orientation = my_sawyer.get_start_pose([0.63,-0.34,0.07],[0.68,0.27,0.07])
     rospy.logdebug('The orientation is: %s', orientation)
 
     # go to starting pose
     if_success = my_sawyer.go_to_pose(position,orientation)
-    #my_sawyer.go_to_pose_initial()
-    #plan , fraction = my_sawyer.plan_path()
-    #my_sawyer.execute_plan(plan)
 
     rospy.spin()
-
-"""
-def plan_path(self):
-		self.waypoints = []
-		self.wpose = self.move_group.get_current_pose().pose
-		self.wpose.position.x += 1*0.01
-		self.wpose.position.y -= 1*0.01
-		self.waypoints.append(copy.deepcopy(self.wpose))
-		(plan,fraction) = self.move_group.compute_cartesian_path(self.waypoints,0.01,0.0)
-		return plan, fraction
-	
-    def execute_plan(self,plan):
-		self.move_group.execute(plan,wait=True)
-
-    def go_to_pose_initial(self):
-        ''' Make the end effector go to a pose in task space
-        
-        Args:
-            position (1*3 list e.g. [0.4,0.1,0.4]) : x, y, z coordinates of goal position
-            orientation (1*4 list e.g. [0,0,0,1]) : x, y, z, w (quaternion) of a orientation
-        '''
-	wpose = self.move_group.get_current_pose().pose
-        pose_goal = geometry_msgs.msg.Pose()
-        pose_goal.position.x = wpose.position.x
-        pose_goal.position.y = wpose.position.y
-        pose_goal.position.z = wpose.position.z
-        pose_goal.orientation.x = wpose.orientation.x
-        pose_goal.orientation.y = wpose.orientation.y
-        pose_goal.orientation.z = wpose.orientation.z
-        pose_goal.orientation.w = wpose.orientation.w
-	self.move_group.set_pose_target(pose_goal)
-"""
