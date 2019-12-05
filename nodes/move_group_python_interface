@@ -30,6 +30,8 @@ import numpy as np
 from tf.transformations import quaternion_from_euler
 from moveit_msgs.msg import RobotState, Constraints, JointConstraint
 import intera_interface
+from mini_golf.srv import InitRobot, InitRobotRequest, InitRobotResponse
+from mini_golf.srv import MoveBehindBall,MoveBehindBallRequest, MoveBehindBallResponse
 
 
 
@@ -277,7 +279,7 @@ class MoveGroupPythonInterface(object):
 
 
     ##### Wrapping functions #####
-    def initialize_robot_pipline(self):
+    def initialize_robot_pipline(self,req):
         ''' Initialize the robot, add collision detection '''
         # add the table and putter to the planning scene
         self.add_table()
@@ -286,7 +288,7 @@ class MoveGroupPythonInterface(object):
         self.return_home()
 
 
-    def move_to_start_position_pipline(self):
+    def move_to_start_position_pipline(self,req):
         ''' Complete the pipline of moving end effector to the starting pose '''
         # setup the constraint
         self.init_path_constraints()
@@ -308,8 +310,8 @@ if __name__ == '__main__':
     # get current state
     rospy.logdebug(my_sawyer.current_state())
 
-    my_sawyer.initialize_robot_pipline()
-    rospy.sleep(5)
-    my_sawyer.move_to_start_position_pipline()
+    # Create service
+    s1 = rospy.Service('init_robot', InitRobot, my_sawyer.initialize_robot_pipline)
+    s2 = rospy.Service('move_behind_ball', MoveBehindBall, my_sawyer.move_to_start_position_pipline)
 
     rospy.spin()

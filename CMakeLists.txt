@@ -60,6 +60,8 @@ add_service_files(
   FILES
   CV_POIs.srv
   CamCal.srv
+  InitRobot.srv
+  MoveBehindBall.srv
 )
 
 ## Generate actions in the 'action' folder
