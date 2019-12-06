@@ -3,14 +3,26 @@
 import intera_interface
 import argparse
 import rospy
+from mini_golf.srv import DisplayPicture, DisplayPictureResponse
 
-def main():
-    file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/tiger_woods.png"
-    rospy.init_node("head_display_example", anonymous=True)
-    head_display = intera_interface.HeadDisplay()
-    head_display.display_image(file_arg) #args.file, args.loop, args.rate)
+def display_picture(req):
+    if req.result = 1:
+    	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/celebration.png"
+    	head_display = intera_interface.HeadDisplay()
+    	picture = head_display.display_image(file_arg)#args.file, args.loop, args.rate)
+	return DisplayPictureResponse(picture)
+    else:
+	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/hitting.png"
+    	head_display = intera_interface.HeadDisplay()
+    	picture = head_display.display_image(file_arg)
+	return DisplayPictureResponse(picture)
+
+def picture_server():
+	rospy.init_node("tiger_woods", anonymous=True)
+	service = rospy.Service('picture_display', DisplayPicture,display_picture)
+	rospy.spin()
 
 if __name__ == '__main__':
-    main()
+    picture_server()
 
 
