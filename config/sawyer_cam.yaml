@@ -1,17 +1,17 @@
 #these are dummy values from my computer webcam for rn
 sawyer_cam:
-  image_width: 640
-  image_height: 480
-  camera_name: sawyer_cam
+  image_width: 1280
+  image_height: 800
+  camera_name: narrow_stereo
   camera_matrix:
     rows: 3
     cols: 3
-    data: [563.831203, 0.000000, 343.858392, 0.000000, 557.978103, 233.511242, 0.000000, 0.000000, 1.000000]
+    data: [412.253671, 0.000000, 636.981605, 0.000000, 413.560094, 392.065559, 0.000000, 0.000000, 1.000000]
   distortion_model: plumb_bob
   distortion_coefficients:
     rows: 1
     cols: 5
-    data: [-0.159141, 0.147298, 0.007762, -0.000920, 0.000000]
+    data: [-0.005855, -0.008140, 0.004606, -0.002480, 0.000000]
   rectification_matrix:
     rows: 3
     cols: 3
@@ -19,4 +19,4 @@ sawyer_cam:
   projection_matrix:
     rows: 3
     cols: 4
-    data: [544.630249, 0.000000, 343.604608, 0.000000, 0.000000, 543.934875, 235.882020, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000]
+    data: [377.072479, 0.000000, 622.465311, 0.000000, 0.000000, 408.179016, 397.446701, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000]
