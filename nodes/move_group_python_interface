@@ -317,75 +317,8 @@ if __name__ == '__main__':
     # get current state
     rospy.logdebug(my_sawyer.current_state())
 
-<<<<<<< HEAD
-    # add the table and putter to the planning scene
-    my_sawyer.add_table()
-    my_sawyer.add_putter()
-
-    #name: [head_pan, right_j0, right_j1, right_j2, right_j3, right_j4, right_j5, right_j6, torso_t0]
-    #position: [0.1414794921875, -0.2295791015625, 1.1898857421875, -0.2348466796875, -2.1429931640625, -2.977087890625, -2.2255673828125, -1.4547744140625, 0.0]
-
-    #name: [right_j0, head_pan, right_j1, right_j2, right_j3, right_j4, right_j5, right_j6, right_gripper_l_finger_joint,
-    #right_gripper_r_finger_joint]
-    #position: [-0.947546875, 0.147466796875, -3.21740625, -2.97183984375, 1.694666015625, -2.426177734375, 0.2669013671875, -0.0843173828125, 0.041667, -0.041667]
-
-    my_sawyer.return_home()
-    # calculaete starting pose
-    position, orientation = my_sawyer.get_start_pose([0.8,0.532,-0.43],[0.33,0.4,-0.43]) #([0.63,-0.34,0.07],[0.68,0.27,0.07])
-    """
-
-    area1 = [0.3,0.355,-0.43]
-    area2 = [0.3,0.0,-0.43]
-    area3 = [0.35,-0.295,-0.43]
-    area4 = [0.75,-0.355,-0.43]
-    area5 = [0.75,0.0,-0.43]
-    area6 = [0.64,0.47,-0.4]
-    """
-    rospy.logdebug('The orientation is: %s', orientation)
-    
-    # go to starting pose
-    if_success = my_sawyer.go_to_pose(position,orientation)
-    #my_sawyer.go_to_pose_initial()
-    #plan , fraction = my_sawyer.plan_path()
-    #my_sawyer.execute_plan(plan)
-
-    rospy.spin()
-
-"""
-def plan_path(self):
-		self.waypoints = []
-		self.wpose = self.move_group.get_current_pose().pose
-		self.wpose.position.x += 1*0.01
-		self.wpose.position.y -= 1*0.01
-		self.waypoints.append(copy.deepcopy(self.wpose))
-		(plan,fraction) = self.move_group.compute_cartesian_path(self.waypoints,0.01,0.0)
-		return plan, fraction
-	
-    def execute_plan(self,plan):
-		self.move_group.execute(plan,wait=True)
-
-    def go_to_pose_initial(self):
-        ''' Make the end effector go to a pose in task space
-        
-        Args:
-            position (1*3 list e.g. [0.4,0.1,0.4]) : x, y, z coordinates of goal position
-            orientation (1*4 list e.g. [0,0,0,1]) : x, y, z, w (quaternion) of a orientation
-        '''
-	wpose = self.move_group.get_current_pose().pose
-        pose_goal = geometry_msgs.msg.Pose()
-        pose_goal.position.x = wpose.position.x
-        pose_goal.position.y = wpose.position.y
-        pose_goal.position.z = wpose.position.z
-        pose_goal.orientation.x = wpose.orientation.x
-        pose_goal.orientation.y = wpose.orientation.y
-        pose_goal.orientation.z = wpose.orientation.z
-        pose_goal.orientation.w = wpose.orientation.w
-	self.move_group.set_pose_target(pose_goal)
-"""
-=======
     # Create service
     s1 = rospy.Service('init_robot', InitRobot, my_sawyer.initialize_robot_pipline)
     s2 = rospy.Service('move_behind_ball', MoveBehindBall, my_sawyer.move_to_start_position_pipline)
 
     rospy.spin()
->>>>>>> upstream/master
