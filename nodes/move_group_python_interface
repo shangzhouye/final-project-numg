@@ -4,12 +4,17 @@ based on the move_it python interface.
 
 - getting robot current state
 - planning to a pose goal
+- calculate a starting pose before hitting
+- add table and putter into planning scene
+- add a constrait on joint 6
 
 PUBLISHERS:
     /move_group/display_planned_path (moveit_msgs.msg.DisplayTrajectory) 
         ~ a DisplayTrajectory publisher which is used to display trajectories in Rviz
-
 '''
+
+
+
 from __future__ import division
 import sys
 import copy
@@ -23,9 +28,18 @@ from std_msgs.msg import String
 from moveit_commander.conversions import pose_to_list
 import numpy as np
 from tf.transformations import quaternion_from_euler
+from moveit_msgs.msg import RobotState, Constraints, JointConstraint
+import intera_interface
+from mini_golf.srv import InitRobot, InitRobotRequest, InitRobotResponse
+from mini_golf.srv import MoveBehindBall,MoveBehindBallRequest, MoveBehindBallResponse
+
+
 
 class MoveGroupPythonInterface(object):
-    ''' Integrate the functions we need for the mini-golf project as python interface '''
+    ''' Integrate the functions we need for the mini-golf project '''
+
+
+
     def __init__(self):
         ''' Initialize RobotCommander, PlanningSceneInterface and MoveGroupCommander objects respectively '''
         self.robot = moveit_commander.RobotCommander()
@@ -35,6 +49,8 @@ class MoveGroupPythonInterface(object):
         self.display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
                                                moveit_msgs.msg.DisplayTrajectory,
                                                queue_size=20)
+
+        # get the end effector link name it is controlling
         self.eef_link = self.move_group.get_end_effector_link()
         rospy.logdebug('End effector link: %s', self.eef_link)
 
@@ -51,6 +67,11 @@ class MoveGroupPythonInterface(object):
                                 'right_hand_camera',\
                                 'right_wrist']
 
+        # used for sawyer python api
+        self.limb = intera_interface.Limb('right')
+
+
+
     def current_state(self):
         ''' Get the current state of the robot
         
@@ -59,6 +80,7 @@ class MoveGroupPythonInterface(object):
         '''
         current_state = self.robot.get_current_state()
         return current_state
+
 
 
     def go_to_pose(self, position, orientation):
@@ -83,8 +105,8 @@ class MoveGroupPythonInterface(object):
         self.move_group.set_max_velocity_scaling_factor(1.0)
         self.move_group.set_max_acceleration_scaling_factor(1.0)
 
-        # try to find the solution for five times
-        for i in range(5):
+        # try to find the solution for several times
+        for i in range(10):
 
             plan = self.move_group.go(wait=True)
 
@@ -149,7 +171,8 @@ class MoveGroupPythonInterface(object):
         return position, orientation
 
 
-    def add_table(self, x_offset=0.6, z_height=0.02):
+
+    def add_table(self, x_offset=0.6, z_height=-0.5):
         ''' Add table to the planning scene 
         
         Args:
@@ -160,12 +183,14 @@ class MoveGroupPythonInterface(object):
         table_pose.header.frame_id = "world"
         table_pose.pose.orientation.w = 1.0
         table_pose.pose.position.x = x_offset
-        table_pose.pose.position.z = z_height - 0.05
+        table_pose.pose.position.z = z_height - 0.025
         table_name = "table"
         table_size = (0.6096, 1.2192, 0.05)
         self.scene.add_box(table_name, table_pose, size=table_size)
         if not self.wait_object_update(table_name):
             rospy.logdebug('Attach table failed.')
+
+
 
     def add_putter(self):
         ''' Add putter to the planning scene and attach it to the gripper '''
@@ -180,6 +205,7 @@ class MoveGroupPythonInterface(object):
             self.scene.attach_box(self.eef_link, putter_name, touch_links=self.gripper_links)
         else:
             rospy.logdebug('Attach putter failed.')
+
 
 
     def wait_object_update(self, object_name, timeout=4):
@@ -203,6 +229,77 @@ class MoveGroupPythonInterface(object):
 
 
 
+    def init_path_constraints(self):
+        ''' Add the joint 6 constraint to align joint 5 with the hitting direction '''
+        self.constraints = Constraints()
+        joint_constraint = JointConstraint()
+
+        self.constraints.name = "align_joint5"
+
+        joint_constraint.position = 3.14/2
+        joint_constraint.tolerance_above = 0.1
+        joint_constraint.tolerance_below = 0.3
+        joint_constraint.weight = 1
+
+        joint_constraint.joint_name = "right_j6"
+        self.constraints.joint_constraints.append(joint_constraint)
+
+        self.move_group.set_path_constraints(self.constraints)
+
+
+
+    def hit_it(self):
+        ''' Hit the ball by rotating joint 5 '''
+        rospy.sleep(3)
+        joint_goal = self.move_group.get_current_joint_values()
+        joint_goal[5] += pi/6
+        self.move_group.go(joint_goal, wait=True)
+        self.move_group.stop()
+
+        rospy.sleep(3)
+        joint_goal = self.move_group.get_current_joint_values()
+        joint_goal[5] -= pi/3
+        self.move_group.go(joint_goal, wait=True)
+        self.move_group.stop()
+
+
+    def return_home(self):
+        ''' Go to the defined home position '''
+        joint_goal = self.move_group.get_current_joint_values()
+        joint_goal[0]=0.0
+        joint_goal[1]=0.0
+        joint_goal[2]=0.0
+        joint_goal[3]=np.pi/2
+        joint_goal[4]=0.0
+        joint_goal[5]=0.0
+        joint_goal[6] = -np.pi/2
+        self.move_group.go(joint_goal, wait=True)
+        self.move_group.stop()
+
+
+
+    ##### Wrapping functions #####
+    def initialize_robot_pipline(self,req):
+        ''' Initialize the robot, add collision detection '''
+        # add the table and putter to the planning scene
+        self.add_table()
+        self.add_putter()
+
+        self.return_home()
+
+
+    def move_to_start_position_pipline(self,req):
+        ''' Complete the pipline of moving end effector to the starting pose '''
+        # setup the constraint
+        self.init_path_constraints()
+
+        # calculate starting pose
+        position, orientation = self.get_start_pose([0.736,0.432,-0.44],[0.5,0.305,-0.44])
+
+        # go to starting pose
+        if_success = self.go_to_pose(position,orientation)
+
+
 if __name__ == '__main__':
     moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node('move_group_python_interface', anonymous=True, log_level=rospy.DEBUG)
@@ -213,15 +310,8 @@ if __name__ == '__main__':
     # get current state
     rospy.logdebug(my_sawyer.current_state())
 
-    # add the table and putter to the planning scene
-    my_sawyer.add_table()
-    my_sawyer.add_putter()
-
-    # calculaete starting pose
-    position, orientation = my_sawyer.get_start_pose([0.63,-0.34,0.07],[0.68,0.27,0.07])
-    rospy.logdebug('The orientation is: %s', orientation)
-
-    # go to starting pose
-    if_success = my_sawyer.go_to_pose(position,orientation)
+    # Create service
+    s1 = rospy.Service('init_robot', InitRobot, my_sawyer.initialize_robot_pipline)
+    s2 = rospy.Service('move_behind_ball', MoveBehindBall, my_sawyer.move_to_start_position_pipline)
 
     rospy.spin()
