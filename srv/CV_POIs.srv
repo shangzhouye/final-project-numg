@@ -2,5 +2,5 @@
 
 ---
 #returns Pose of ball and hole
-geometry_msgs/Pose ball_pos
-geometry_msgs/Pose hole_pos
+geometry_msgs/Pose ball_pose
+geometry_msgs/Pose hole_pose

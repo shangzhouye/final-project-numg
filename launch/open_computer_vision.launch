@@ -1,5 +1,5 @@
 <launch>
     <node name="ComputerVision" pkg="mini_golf" type="cv_detect_ball"/>
 
-    <node name="ImageViewer" pkg="image_view" type="image_view" args="image:=/sawyer_image_out"/>
+    <node name="ImageViewer" pkg="image_view" type="image_view" args="image:=/overhead_image_out"/>
 </launch>

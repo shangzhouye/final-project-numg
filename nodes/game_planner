@@ -1,42 +1,111 @@
-#!/usr/bin/env python 
-import rospy 
+#!/usr/bin/env python
+
+import rospy
 from mini_golf.srv import CV_POIs, CV_POIsResponse, CamCal, CamCalResponse
 from geometry_msgs.msg import Transform
+import numpy as np
+from tf.transformations import quaternion_matrix
+
+def se3_inv(matrix):
+    """
+    Calculates the inverse of an se(3) transformation matrix.
+    """
+    R = np.array([[matrix[0, 0], matrix[0, 1], matrix[0, 2]],       #rotation matrix
+                  [matrix[1, 0], matrix[1, 1], matrix[1, 2]],
+                  [matrix[2, 0], matrix[2, 1], matrix[2, 2]]])
+
+    p = np.array([[matrix[0, 3]],                                   #translation vector
+                  [matrix[1, 3]],
+                  [matrix[1, 3]]])
+
+    RT = np.transpose(R)                        #transpose rotation matrix
+
+    inv_p = -np.dot(RT, p)                      #invert translation vector
+
+    g = np.hstack((RT, inv_p))                  #horizontally concatenate transposed matrix
+                                                #and inverted translation vector
+
+    g = np.vstack((g, np.array([0, 0, 0, 1])))  #vertically concatenate above 3x4 matrix with
+                                                #standard bottom row of transformation matrix
+
+    return g                                    #output transformation matrix
 
 
 class GamePlanner(object):
-	def __init__(self):
+    def __init__(self):
+        #perform subscriptiosn
 
-		#perform subscriptiosn
+        #establish publishers
 
-		#establish publishers
+        #establish service proxies
+        self.get_camera_cal = rospy.ServiceProxy('/get_camera_cal', CamCal)
+        self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
+        self.setup()
+        self.loop()
+        #set initial state
+        self.state = 'uninitialized'
 
-		#establish service proxies 
-		self.get_camera_cal = rospy.ServiceProxy('/get_camera_cal', CamCal)
-		self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
-		self.setup()
+    def setup(self):
+        #call camera frame-getting service
+        cam_cal_resp = self.get_camera_cal()
 
-		#set initial state
-		self.state = 'uninitialized'
+        #sawyer & overhead transforms
+        sawyer_trans = cam_cal_resp.sawyer_transform
+        overhead_trans = cam_cal_resp.overhead_transform
 
-	def setup(self):
-		cam_cal_resp = CamCalResponse()
-		cv_pois_resp = CV_POIsResponse()
-		rospy.loginfo("printing cam cal resp")
-		rospy.loginfo(cam_cal_resp)
-		rospy.loginfo("printing cv pois resp")
-		rospy.loginfo(cv_pois_resp)
+        #sawyer/overhead rotations (quaternion form)
+        Q_sawyer_cw = np.array([sawyer_trans.rotation.x,
+                                sawyer_trans.rotation.y,
+                                sawyer_trans.rotation.z,
+                                sawyer_trans.rotation.w])
+        Q_overhead_cw = np.array([overhead_trans.rotation.x,
+                                  overhead_trans.rotation.y,
+                                  overhead_trans.rotation.z,
+                                  overhead_trans.rotation.w])
+        '''
+        Rotation matrices below; in se(3) form
+        '''
+        R_overhead_cw = quaternion_matrix(Q_overhead_cw)
+        print(R_overhead_cw)
+        R_sawyer_cw = quaternion_matrix(Q_sawyer_cw)
+        print(R_sawyer_cw)
 
+        #sawyer/overhead translation vectors
+        p_sawyer_cw = np.array([sawyer_trans.translation.x,
+                                sawyer_trans.translation.y,
+                                sawyer_trans.translation.z,
+                                1])
+        p_overhead_cw = np.array([overhead_trans.translation.x,
+                                  overhead_trans.translation.y,
+                                  overhead_trans.translation.z,
+                                  1])
 
-	def loop(self):
-		rate = rospy.Rate(31)
-		while not rospy.is_shutdown():
-			rate.sleep()
+        T_overhead_cw = np.zeros((4, 4))			#blank transformation matrices
+        T_sawyer_cw = np.zeros((4, 4))
+        T_overhead_cw[0:4, 0:4] = R_overhead_cw		#paste rotation matrices into transformation matrices
+        T_sawyer_cw[0:4, 0:4] = R_sawyer_cw
+        T_overhead_cw[:, -1] = p_overhead_cw		#paste translation vectors into transformation matrices
+        T_sawyer_cw[:, -1] = p_sawyer_cw
+
+        # pois_in_cam_frame = self.get_POIs()
+        # ball_pos_in_cam_frame = pois_in_cam_frame.ball_pos
+        # hole_pos_in_cam_frame = pois_in_cam_frame.hole_pos
+
+        cv_pois_resp = CV_POIsResponse()
+        #rospy.loginfo("printing cam cal resp")
+        #rospy.loginfo(cam_cal_resp)
+        #rospy.loginfo("printing cv pois resp")
+        #rospy.loginfo(cv_pois_resp)
+
+    def loop(self):
+        rate = rospy.Rate(31)
+        while not rospy.is_shutdown():
+            rate.sleep()
 
 
 
 
 
 if __name__ == '__main__':
-	rospy.init_node("game_planner")
-	GamePlanner()
+    rospy.init_node("game_planner")
+    GamePlanner()

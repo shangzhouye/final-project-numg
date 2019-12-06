@@ -1,0 +1,7 @@
+## input
+geometry_msgs/Pose ball_position
+geometry_msgs/Pose hole_position
+---
+## output 0: failure , 1:success
+
+

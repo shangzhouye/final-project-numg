@@ -1,0 +1,5 @@
+geometry_msgs/Pose hole_position # 3D position of the hole
+geometry_msgs/Pose ball_position # 3D position of the ball
+bool if_add_constraint # add the constraint to make joint 5 align with the hitting direction or not
+---
+# returns none
