@@ -62,6 +62,8 @@ add_service_files(
   CamCal.srv
   InitRobot.srv
   MoveBehindBall.srv
+  HitBall.srv
+  DisplayPicture.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -168,6 +170,8 @@ install(PROGRAMS
   nodes/cv_detect_ball
   nodes/game_planner
   nodes/move_group_python_interface
+  nodes/hit_ball
+  nodes/tiger_woods
   sawyer_setup.bash
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
