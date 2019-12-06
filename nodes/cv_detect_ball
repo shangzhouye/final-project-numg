@@ -35,9 +35,9 @@ class DetectBall(object):
         self.ball_S_range = (130, 255)
         self.ball_V_range = (100, 255)
         #HSV ranges for turf (green)
-        self.turf_H_range = (20, 100)
-        self.turf_S_range = (0, 255)
-        self.turf_V_range = (0, 255)
+        self.turf_H_range = (20, 45)
+        self.turf_S_range = (100, 255)
+        self.turf_V_range = (0, 200)
         rospy.loginfo("HSV filters set.")
 
         self.bridge = CvBridge()            #converts between ROS and cv2 image
@@ -103,7 +103,8 @@ class DetectBall(object):
         #find contours based on size
         for cont in contours:                                   #for all contours
             area = cv2.contourArea(cont)                        #determine contour area
-            if area > 1250 and area < 1750:                     #if contour is correct size
+            if area > 600 and area < 800:                       #if contour is correct size
+                #if using smaller webcam: threshold is 1250:1750
                 (x, y), radius = cv2.minEnclosingCircle(cont)   #find smallest circle enclosing it
                 self.hole_X = int(x)                            #hole center x-coordinate
                 self.hole_Y = int(y)                            #hole center y-coordinate
