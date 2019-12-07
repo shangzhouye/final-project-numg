@@ -55,8 +55,8 @@ class HitTheBall(object):
 		self.waypoints = []
 		self.wpose = self.move_group.get_current_pose().pose
 		joint_goal = self.move_group.get_current_joint_values()
-		self.ball_pose = req.ball_position
-		self.hole_pose = req.hole_position
+		# self.ball_pose = req.ball_position
+		# self.hole_pose = req.hole_position
 		#return HitBallResponse()
 
 		
@@ -176,7 +176,7 @@ class HitTheBall(object):
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 
-		return HitBallResponse("success")
+		return HitBallResponse()
 
 
 if __name__ == '__main__':
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     rospy.init_node('hit_ball', anonymous=True, log_level=rospy.DEBUG)
     my_put = HitTheBall()
     rospy.loginfo(my_put.current_state())
-    hit_direction= my_put.ball_pos_to_sawyer([0.35,0.30,-0.44])
+    # hit_direction= my_put.ball_pos_to_sawyer([0.35,0.30,-0.44])
     hit_service = rospy.Service('hit_ball', HitBall, my_put.my_putter)
     #my_put.plan_path(hit_direction)
     rospy.spin()
