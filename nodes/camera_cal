@@ -21,7 +21,7 @@ class CameraCallib(object):
         self.killb = 0
 
         rospy.Subscriber("/overhead_image_out", Image, self.overhead_cal_callback)
-        rospy.Subscriber("/sawyer_image_out", Image, self.sawyer_cal_callback)
+        rospy.Subscriber("/io/internal_camera/head_camera/image_raw", Image, self.sawyer_cal_callback)
 
         self.bridge = CvBridge()
 
@@ -100,7 +100,8 @@ class CameraCallib(object):
 
     def main(self):
         rate = rospy.Rate(31)
-        while not rospy.is_shutdown() and not (self.killa and self.killb):
+        # while not rospy.is_shutdown() and not (self.killa and self.killb):
+        while not rospy.is_shutdown():
             rate.sleep()
 
 if __name__ == '__main__':
