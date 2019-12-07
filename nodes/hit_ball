@@ -13,7 +13,7 @@ import numpy as np
 import math
 import numpy as np
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-#from mini_golf.srv import HitBall, HitBallResponse
+from mini_golf.srv import HitBall, HitBallResponse
 
 class HitTheBall(object):
 	def __init__(self):
@@ -21,7 +21,6 @@ class HitTheBall(object):
 		self.scene = moveit_commander.PlanningSceneInterface()
 		self.group_name = "right_arm"
 		self.move_group = moveit_commander.MoveGroupCommander(self.group_name)
-		self.hit_service = rospy.Service('hit_ball', Hit_Ball, self.my_putter)
 		#self.display_trajectory_publisher = rospy.Publisher('/move_group display_planned_path',moveit_msgs.msg.DisplayTrajectory,queue_size=20)
 		
 	### Finding the x-y coordinates for the forward motion ###
@@ -49,93 +48,21 @@ class HitTheBall(object):
 		return current_state
 
 	### planning a path and then executing it ###
-	def plan_path(self,hit_direction):
+	# def plan_path(self,hit_direction):
+		
+
+	def my_putter(self,req):
 		self.waypoints = []
 		self.wpose = self.move_group.get_current_pose().pose
 		joint_goal = self.move_group.get_current_joint_values()
-
-	def my_putter(self,req):
 		self.ball_pose = req.ball_position
 		self.hole_pose = req.hole_position
-		return HitBallResponse()
-		
-		if self.wpose.position.y < -0.3 and self.wpose.position.x<=0.4:
-			joint_goal[0]= joint_goal[0]
-			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2]
-			joint_goal[3]= joint_goal[3]
-			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] -np.pi/2
-			joint_goal[6] = joint_goal[6]
-			self.move_group.go(joint_goal, wait=True)
-			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0]
-			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2]
-			joint_goal[3]= joint_goal[3]
-			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] + np.pi
-			joint_goal[6] = joint_goal[6]
-			self.move_group.go(joint_goal, wait=True)
-		elif self.wpose.position.y < -0.3 and self.wpose.position.x>0.4:
-			joint_goal[0]= joint_goal[0] -np.pi/6
-			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2]
-			joint_goal[3]= joint_goal[3]
-			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] 
-			joint_goal[6] = joint_goal[6]
-			self.move_group.go(joint_goal, wait=True)
-			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0] + np.pi/3
-			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2]
-			joint_goal[3]= joint_goal[3]
-			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] 
-			joint_goal[6] = joint_goal[6]
-			self.move_group.go(joint_goal, wait=True)
-			
-		elif -0.3<= self.wpose.position.y <= 0.3 and self.wpose.position.x<0.4:
-			joint_goal[0]= joint_goal[0] 
-			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2] -np.pi/6
-			joint_goal[3]= joint_goal[3]
-			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] 
-			joint_goal[6] = joint_goal[6]
-			self.move_group.go(joint_goal, wait=True)
-			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0] 
-			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2] + np.pi/3
-			joint_goal[3]= joint_goal[3]
-			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] 
-			joint_goal[6] = joint_goal[6]
-			self.move_group.go(joint_goal, wait=True)
-			
-		elif -0.3<= self.wpose.position.y <= 0.4 and self.wpose.position.x>0.4:
-			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0] -np.pi/6
-			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2]
-			joint_goal[3]= joint_goal[3]
-			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] 
-			joint_goal[6] = joint_goal[6]
-			self.move_group.go(joint_goal, wait=True)
-			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0] + np.pi/3
-			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2]
-			joint_goal[3]= joint_goal[3]
-			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] 
-			joint_goal[6] = joint_goal[6]
-			self.move_group.go(joint_goal, wait=True)
+		#return HitBallResponse()
 
-		elif self.wpose.position.y > 0.3 and self.wpose.position.x<0.4:	
+		
+		## AREA 1##	
+		
+		if self.wpose.position.y > 0.3 and self.wpose.position.x<0.4:	
 			joint_goal = self.move_group.get_current_joint_values()
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
@@ -155,6 +82,89 @@ class HitTheBall(object):
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 
+		## AREA 2 ##			
+		elif -0.3<= self.wpose.position.y <= 0.3 and self.wpose.position.x<0.4:
+			joint_goal[0]= joint_goal[0] 
+			joint_goal[1]= joint_goal[1]
+			joint_goal[2]= joint_goal[2] -np.pi/6
+			joint_goal[3]= joint_goal[3]
+			joint_goal[4]= joint_goal[4]
+			joint_goal[5]= joint_goal[5] 
+			joint_goal[6] = joint_goal[6]
+			self.move_group.go(joint_goal, wait=True)
+			joint_goal = self.move_group.get_current_joint_values()
+			joint_goal[0]= joint_goal[0] 
+			joint_goal[1]= joint_goal[1]
+			joint_goal[2]= joint_goal[2] + np.pi/3
+			joint_goal[3]= joint_goal[3]
+			joint_goal[4]= joint_goal[4]
+			joint_goal[5]= joint_goal[5] 
+			joint_goal[6] = joint_goal[6]
+			self.move_group.go(joint_goal, wait=True)
+
+		## AREA 3 ##
+		if self.wpose.position.y < -0.3 and self.wpose.position.x<=0.4:
+			joint_goal[0]= joint_goal[0]
+			joint_goal[1]= joint_goal[1]
+			joint_goal[2]= joint_goal[2]
+			joint_goal[3]= joint_goal[3]
+			joint_goal[4]= joint_goal[4]
+			joint_goal[5]= joint_goal[5] -np.pi/2
+			joint_goal[6] = joint_goal[6]
+			self.move_group.go(joint_goal, wait=True)
+			joint_goal = self.move_group.get_current_joint_values()
+			joint_goal[0]= joint_goal[0]
+			joint_goal[1]= joint_goal[1]
+			joint_goal[2]= joint_goal[2]
+			joint_goal[3]= joint_goal[3]
+			joint_goal[4]= joint_goal[4]
+			joint_goal[5]= joint_goal[5] + np.pi
+			joint_goal[6] = joint_goal[6]
+			self.move_group.go(joint_goal, wait=True)
+		
+		## AREA 4 ##
+		elif self.wpose.position.y < -0.3 and self.wpose.position.x>0.4:
+			joint_goal[0]= joint_goal[0] -np.pi/6
+			joint_goal[1]= joint_goal[1]
+			joint_goal[2]= joint_goal[2]
+			joint_goal[3]= joint_goal[3]
+			joint_goal[4]= joint_goal[4]
+			joint_goal[5]= joint_goal[5] 
+			joint_goal[6] = joint_goal[6]
+			self.move_group.go(joint_goal, wait=True)
+			joint_goal = self.move_group.get_current_joint_values()
+			joint_goal[0]= joint_goal[0] + np.pi/3
+			joint_goal[1]= joint_goal[1]
+			joint_goal[2]= joint_goal[2]
+			joint_goal[3]= joint_goal[3]
+			joint_goal[4]= joint_goal[4]
+			joint_goal[5]= joint_goal[5] 
+			joint_goal[6] = joint_goal[6]
+			self.move_group.go(joint_goal, wait=True)
+		
+		## AREA 5##			
+		elif -0.3<= self.wpose.position.y <= 0.4 and self.wpose.position.x>0.4:
+			joint_goal = self.move_group.get_current_joint_values()
+			joint_goal[0]= joint_goal[0] -np.pi/6
+			joint_goal[1]= joint_goal[1]
+			joint_goal[2]= joint_goal[2]
+			joint_goal[3]= joint_goal[3]
+			joint_goal[4]= joint_goal[4]
+			joint_goal[5]= joint_goal[5] 
+			joint_goal[6] = joint_goal[6]
+			self.move_group.go(joint_goal, wait=True)
+			joint_goal = self.move_group.get_current_joint_values()
+			joint_goal[0]= joint_goal[0] + np.pi/3
+			joint_goal[1]= joint_goal[1]
+			joint_goal[2]= joint_goal[2]
+			joint_goal[3]= joint_goal[3]
+			joint_goal[4]= joint_goal[4]
+			joint_goal[5]= joint_goal[5] 
+			joint_goal[6] = joint_goal[6]
+			self.move_group.go(joint_goal, wait=True)
+			
+		
+		## AREA 6##
 		elif self.wpose.position.y > 0.3 and self.wpose.position.x>0.4:	
 			joint_goal = self.move_group.get_current_joint_values()
 			joint_goal[0]= joint_goal[0] 
@@ -166,6 +176,8 @@ class HitTheBall(object):
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 
+		return HitBallResponse("success")
+
 
 if __name__ == '__main__':
     moveit_commander.roscpp_initialize(sys.argv)
@@ -173,7 +185,8 @@ if __name__ == '__main__':
     my_put = HitTheBall()
     rospy.loginfo(my_put.current_state())
     hit_direction= my_put.ball_pos_to_sawyer([0.35,0.30,-0.44])
-    my_put.plan_path(hit_direction)
+    hit_service = rospy.Service('hit_ball', HitBall, my_put.my_putter)
+    #my_put.plan_path(hit_direction)
     rospy.spin()
 
 """
