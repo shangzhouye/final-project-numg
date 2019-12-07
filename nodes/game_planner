@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
-from mini_golf.srv import CV_POIs, CV_POIsResponse, CamCal, CamCalResponse
-from geometry_msgs.msg import Transform
+from mini_golf.srv import CV_POIs, CV_POIsResponse, CamCal, CamCalResponse, HitBall, HitBallResponse, InitRobot, InitRobotResponse, MoveBehindBall, MoveBehindBallResponse, DisplayPicture, DisplayPictureResponse
+from geometry_msgs.msg import Transform, Pose, Point
 import numpy as np
 from tf.transformations import quaternion_matrix
 
@@ -10,17 +10,12 @@ def se3_inv(matrix):
     """
     Calculates the inverse of an se(3) transformation matrix.
     """
-    R = np.array([[matrix[0, 0], matrix[0, 1], matrix[0, 2]],       #rotation matrix
-                  [matrix[1, 0], matrix[1, 1], matrix[1, 2]],
-                  [matrix[2, 0], matrix[2, 1], matrix[2, 2]]])
-
-    p = np.array([[matrix[0, 3]],                                   #translation vector
-                  [matrix[1, 3]],
-                  [matrix[1, 3]]])
+    R = matrix[0:3,0:3] #roation matrix
+    p = matrix[0:3,-1] #translation vector
 
     RT = np.transpose(R)                        #transpose rotation matrix
 
-    inv_p = -np.dot(RT, p)                      #invert translation vector
+    inv_p = -np.matmul(RT, p)                      #invert translation vector
 
     g = np.hstack((RT, inv_p))                  #horizontally concatenate transposed matrix
                                                 #and inverted translation vector
@@ -40,12 +35,30 @@ class GamePlanner(object):
         #establish service proxies
         self.get_camera_cal = rospy.ServiceProxy('/get_camera_cal', CamCal)
         self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
-        self.setup()
+        self.init_robot = rospy.ServiceProxy('/init_robot', InitRobot)
+        self.move_behind_ball = rospy.ServiceProxy('/move_behind_ball', MoveBehindBall)
+        self.hit_ball = rospy.ServiceProxy('/hit_ball', HitBall)
+        
+        #refelects that we might callibrate Tsawyer with camera or just with cuff
+        self.arena_callib = "param"
+        try:
+            self.arena_params = rospy.get_params('/arena')
+        except:
+            rospy.loginfo("no arena config params loaded into param server, using camera callib data")
+            self.arena_callib = "camera"
+        
+        self.setup_robot()
+        rospy.sleep(3) #sleep for 3 seconds to let things chill out
+        self.setup_Ts()
         self.loop()
-        #set initial state
-        self.state = 'uninitialized'
 
-    def setup(self):
+    def setup_robot(self):
+        #figure out x,y origin of gamespace in sawyer frame
+        #either drag cuff or use our extrinsic camera callibration
+        self.init_robot()
+
+
+    def setup_Ts(self):
         #call camera frame-getting service
         cam_cal_resp = self.get_camera_cal()
 
@@ -82,24 +95,51 @@ class GamePlanner(object):
 
         T_overhead_cw = np.zeros((4, 4))			#blank transformation matrices
         T_sawyer_cw = np.zeros((4, 4))
-        T_overhead_cw[0:4, 0:4] = R_overhead_cw		#paste rotation matrices into transformation matrices
+        T_overhead_cw[0:4, 0:4] = R_overhead_cw		#paste rotation matrices into transformation matrices (Rot mats are output as T mats)
         T_sawyer_cw[0:4, 0:4] = R_sawyer_cw
         T_overhead_cw[:, -1] = p_overhead_cw		#paste translation vectors into transformation matrices
         T_sawyer_cw[:, -1] = p_sawyer_cw
 
-        # pois_in_cam_frame = self.get_POIs()
-        # ball_pos_in_cam_frame = pois_in_cam_frame.ball_pos
-        # hole_pos_in_cam_frame = pois_in_cam_frame.hole_pos
+        self.T_overhead_cw = T_overhead_cw
+        self.T_sawyer_cw = T_sawyer_cw
 
-        cv_pois_resp = CV_POIsResponse()
-        #rospy.loginfo("printing cam cal resp")
-        #rospy.loginfo(cam_cal_resp)
-        #rospy.loginfo("printing cv pois resp")
-        #rospy.loginfo(cv_pois_resp)
+    def get_positions(self):
+        resp = self.get_POIs()
+        #ball position in overhead camera frame
+        ball_pos_o = np.array([resp.ball_pose.position.x, resp.ball_pose.position.y, resp.ball_pose.position.z])
+        hole_pos_o = np.array([resp.hole_pose.position.x, resp.hole_pose.position.y, resp.hole_pose.position.z])
+
+        #transform to ball and hole positions in game frame
+        ball_pos_g = np.matmul(se3_inv(self.T_overhead_cw),ball_pos_o)
+        hole_pos_g = np.matmul(se3_inv(self.T_overhead_cw),hole_pos_o)
+
+        #transform to ball and hole positions in sawyer frame
+        ball_pos_s = np.matmul(self.T_sawyer_cw, ball_pos_g)
+        hole_pos_s = np.matmul(self.T_sawyer_cw, hole_pos_g)
+
+        return ball_pos_s, hole_pos_s
+
+    def move(self, ball_pos, hole_pos):
+        req = MoveBehindBall()
+        req.hole_position.position = Point(hole_pos[0], hole_pos[1], hole_pos[2]) #maybe have Z fixed
+        req.ball_position.position = Point(ball_pos[0], ball_pos[1], ball_pos[2]) #maybe have Z fixed 
+        req.if_add_constraint = False
+        self.move_behind_ball(req)
 
     def loop(self):
-        rate = rospy.Rate(31)
+        rate = rospy.Rate(2)
+        #gets ball and hole positions in sawyer frame
+        ball_pos, hole_pos = self.get_positions()
+        #tell sawyer to move behind ball in sawyer frame coordinates
+        self.move(ball_pos, hole_pos)
+        rospy.sleep(10) #dumb sleep for 10 seconds while we get behind ball
+        self.hit_ball()
+
         while not rospy.is_shutdown():
+            #get ball position in overhead camera frame coordinate
+
+
+
             rate.sleep()
 
 
