@@ -42,7 +42,7 @@ class DetectBall(object):
 
         self.bridge = CvBridge()            #converts between ROS and cv2 image
 
-        self.capture = cv2.VideoCapture(0)  #capture from webcam
+        self.capture = cv2.VideoCapture(2)  #capture from webcam
         '''
         IMPORTANT!!!
         On Riley's computer, use argument 0 for attached camera, use 2 for laptop webcam.
@@ -60,9 +60,9 @@ class DetectBall(object):
         self.find_hole()
 
         #initialize subscriber
-        rospy.Subscriber('/io/internal_camera/head_camera/image_rect_color', Image,
-                         self.detect_ball)
-        rospy.loginfo("Subscriber initialized.")
+        # rospy.Subscriber('/io/internal_camera/head_camera/image_rect_color', Image,
+        #                  self.detect_ball)
+        # rospy.loginfo("Subscriber initialized.")
 
         #initialize service
         self.serv = rospy.Service('get_pois', CV_POIs, self.serv_callback)
@@ -117,7 +117,7 @@ class DetectBall(object):
         #publish hole position
         self.hole_pose_pub.publish(self.hole_pose)
 
-    def detect_ball(self):
+    def detect_ball(self): 
         """
         Detects the ball using color thresholding
         """
