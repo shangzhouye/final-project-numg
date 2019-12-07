@@ -285,6 +285,7 @@ class MoveGroupPythonInterface(object):
         self.add_table()
         self.add_putter()
 
+        return InitRobotResponse()
 
 
     def move_to_start_position_pipline(self,req):
@@ -305,6 +306,8 @@ class MoveGroupPythonInterface(object):
 
         # go to starting pose
         if_success = self.go_to_pose(position,orientation)
+
+        return MoveBehindBallResponse()
 
 
 if __name__ == '__main__':
