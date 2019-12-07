@@ -36,4 +36,9 @@
     <remap from="joint_states" to="robot/joint_states"/>
   </node>
 
+  <!-- Launch move_group_python_interface -->
+  <node name="c" pkg="mini_golf" type="hit_ball" output="screen">
+    <remap from="joint_states" to="robot/joint_states"/>
+  </node>
+
 </launch>
