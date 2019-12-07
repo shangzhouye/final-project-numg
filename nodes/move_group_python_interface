@@ -296,11 +296,11 @@ class MoveGroupPythonInterface(object):
         if req.if_add_constraint:
             self.init_path_constraints()
 
-        hole_position = [req.hole_position.position.x,req.hole_position.position.y,req.hole_position.position.z]
-        ball_position = [req.ball_position.position.x,req.ball_position.position.y,req.ball_position.position.z]
+        hole_position = [req.hole_position.position.x,req.hole_position.position.y,-0.43]
+        ball_position = [req.ball_position.position.x,req.ball_position.position.y,-0.43]
 
         # calculate starting pose
-        # position, orientation = self.get_start_pose([0.736,0.432,-0.44],[0.5,0.305,-0.44])
+        # position, orientation = self.get_start_pose([0.736,0.432,-0.43],[0.5,0.305,-0.43])
         position, orientation = self.get_start_pose(hole_position,ball_position)
 
         # go to starting pose

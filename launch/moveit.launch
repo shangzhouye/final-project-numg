@@ -32,7 +32,7 @@
   </include>
 
   <!-- Launch move_group_python_interface -->
-  <node name="c" pkg="mini_golf" type="move_group_python_interface" output="screen">
+  <node name="move_group_python_interface" pkg="mini_golf" type="move_group_python_interface" output="screen">
     <remap from="joint_states" to="robot/joint_states"/>
   </node>
 
