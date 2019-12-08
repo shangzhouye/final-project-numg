@@ -62,7 +62,7 @@ class HitTheBall(object):
 		
 		## AREA 1##	
 		
-		if self.wpose.position.y > 0.3 and self.wpose.position.x<0.4:	
+		if self.wpose.position.y > 0.3 and self.wpose.position.x<=0.7:	
 			joint_goal = self.move_group.get_current_joint_values()
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
@@ -83,7 +83,7 @@ class HitTheBall(object):
 			self.move_group.go(joint_goal, wait=True)
 
 		## AREA 2 ##			
-		elif -0.3<= self.wpose.position.y <= 0.3 and self.wpose.position.x<0.4:
+		elif -0.3<= self.wpose.position.y <= 0.3 and self.wpose.position.x<=0.7:
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2] -np.pi/6
@@ -103,7 +103,7 @@ class HitTheBall(object):
 			self.move_group.go(joint_goal, wait=True)
 
 		## AREA 3 ##
-		if self.wpose.position.y < -0.3 and self.wpose.position.x<=0.4:
+		if self.wpose.position.y < -0.3 and self.wpose.position.x<=0.7:
 			joint_goal[0]= joint_goal[0]
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2]
@@ -123,7 +123,7 @@ class HitTheBall(object):
 			self.move_group.go(joint_goal, wait=True)
 		
 		## AREA 4 ##
-		elif self.wpose.position.y < -0.3 and self.wpose.position.x>0.4:
+		elif self.wpose.position.y < -0.3 and self.wpose.position.x>0.7:
 			joint_goal[0]= joint_goal[0] -np.pi/6
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2]
@@ -143,7 +143,7 @@ class HitTheBall(object):
 			self.move_group.go(joint_goal, wait=True)
 		
 		## AREA 5##			
-		elif -0.3<= self.wpose.position.y <= 0.4 and self.wpose.position.x>0.4:
+		elif -0.3<= self.wpose.position.y <= 0.3 and self.wpose.position.x>0.7:
 			joint_goal = self.move_group.get_current_joint_values()
 			joint_goal[0]= joint_goal[0] -np.pi/6
 			joint_goal[1]= joint_goal[1]
@@ -165,7 +165,7 @@ class HitTheBall(object):
 			
 		
 		## AREA 6##
-		elif self.wpose.position.y > 0.3 and self.wpose.position.x>0.4:	
+		elif self.wpose.position.y > 0.3 and self.wpose.position.x>0.7:	
 			joint_goal = self.move_group.get_current_joint_values()
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
