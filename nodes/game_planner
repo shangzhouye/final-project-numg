@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from mini_golf.srv import CV_POIs, CV_POIsResponse, CamCal, CamCalResponse, HitBall, HitBallResponse, InitRobot, InitRobotResponse, MoveBehindBall, MoveBehindBallResponse, DisplayPicture, DisplayPictureResponse
+from mini_golf.srv import CV_POIs, CV_POIsResponse, GetPhysical, GetPhysicalResponse, HitBall, HitBallResponse, InitRobot, InitRobotResponse, MoveBehindBall, MoveBehindBallResponse, DisplayPicture, DisplayPictureResponse
 from geometry_msgs.msg import Transform, Pose, Point
 import numpy as np
 from tf.transformations import quaternion_matrix
@@ -32,7 +32,7 @@ class GamePlanner(object):
         #establish publishers
 
         #establish service proxies
-        self.get_camera_cal = rospy.ServiceProxy('/get_camera_cal', CamCal)
+        self.get_physical = rospy.ServiceProxy('/get_physical', GetPhysical)
         self.get_POIs = rospy.ServiceProxy('/get_pois', CV_POIs)
         self.init_robot = rospy.ServiceProxy('/init_robot', InitRobot)
         self.move_behind_ball = rospy.ServiceProxy('/move_behind_ball', MoveBehindBall)
@@ -48,7 +48,6 @@ class GamePlanner(object):
         
         self.setup_robot()
         rospy.sleep(3) #sleep for 3 seconds to let things chill out
-        # self.setup_Ts()
         self.loop()
 
     def setup_robot(self):
@@ -56,88 +55,16 @@ class GamePlanner(object):
         #either drag cuff or use our extrinsic camera callibration
         self.init_robot()
 
-
-    # def setup_Ts(self):
-    #     #call camera frame-getting service
-    #     cam_cal_resp = self.get_camera_cal()
-
-    #     #sawyer & overhead transforms
-    #     sawyer_trans = cam_cal_resp.sawyer_transform
-    #     overhead_trans = cam_cal_resp.overhead_transform
-
-    #     #sawyer/overhead rotations (quaternion form)
-    #     Q_sawyer_cw = np.array([sawyer_trans.rotation.x,
-    #                             sawyer_trans.rotation.y,
-    #                             sawyer_trans.rotation.z,
-    #                             sawyer_trans.rotation.w])
-    #     Q_overhead_cw = np.array([overhead_trans.rotation.x,
-    #                               overhead_trans.rotation.y,
-    #                               overhead_trans.rotation.z,
-    #                               overhead_trans.rotation.w])
-    #     '''
-    #     Rotation matrices below; in se(3) form
-    #     '''
-    #     R_overhead_cw = quaternion_matrix(Q_overhead_cw)
-    #     print(R_overhead_cw)
-    #     R_sawyer_cw = quaternion_matrix(Q_sawyer_cw)
-    #     print(R_sawyer_cw)
-
-    #     #sawyer/overhead translation vectors
-    #     p_sawyer_cw = np.array([sawyer_trans.translation.x,
-    #                             sawyer_trans.translation.y,
-    #                             sawyer_trans.translation.z,
-    #                             1])
-    #     p_overhead_cw = np.array([overhead_trans.translation.x,
-    #                               overhead_trans.translation.y,
-    #                               overhead_trans.translation.z,
-    #                               1])
-
-    #     T_overhead_cw = np.zeros((4, 4))			#blank transformation matrices
-    #     T_sawyer_cw = np.zeros((4, 4))
-    #     T_overhead_cw[0:4, 0:4] = R_overhead_cw		#paste rotation matrices into transformation matrices (Rot mats are output as T mats)
-    #     T_sawyer_cw[0:4, 0:4] = R_sawyer_cw
-    #     T_overhead_cw[:, -1] = p_overhead_cw		#paste translation vectors into transformation matrices
-    #     T_sawyer_cw[:, -1] = p_sawyer_cw
-
-    #     self.T_overhead_cw = T_overhead_cw
-    #     self.T_sawyer_cw = T_sawyer_cw
-
     def get_positions(self):
         resp = self.get_POIs()
-        #ball position in overhead camera frame
-        ball_pos_o = np.array([resp.ball_pose.position.x, resp.ball_pose.position.y, resp.ball_pose.position.z, 1])
-        hole_pos_o = np.array([resp.hole_pose.position.x, resp.hole_pose.position.y, resp.hole_pose.position.z, 1])
+        ball_pose_camera = resp.ball_pose
+        hole_pose_camera = resp.hole_pose
+        ball_pose_sawyer = self.get_physical(ball_pose_camera)
+        hole_pose_sawyer = self.get_physical(hole_pose_camera)
+    
+        return ball_pose_sawyer, hole_pose_sawyer
 
-        #transform to ball and hole positions in game frame
-        ball_pos_g = np.matmul(se3_inv(self.T_overhead_cw),ball_pos_o)
-        hole_pos_g = np.matmul(se3_inv(self.T_overhead_cw),hole_pos_o)
-
-        #transform to ball and hole positions in sawyer frame
-        ball_pos_s = np.matmul(self.T_sawyer_cw, ball_pos_g) 
-        hole_pos_s = np.matmul(self.T_sawyer_cw, hole_pos_g)
-
-        #bring it from pixel space to distance space
-        ball_pos_s[0:2] = ball_pos_s[0:2] * 0.002
-        hole_pos_s[0:2] = hole_pos_s[0:2] * 0.002
-        ball_pos_s[1] = -ball_pos_s[1]
-        hole_pos_s[1] = -hole_pos_s[1]
-        # ball_pos_s[0] =  -ball_pos_s[0]
-        # hole_pos_s[0] = -hole_pos_s[0]
-
-        return ball_pos_s, hole_pos_s
-
-    def move(self, ball_pos, hole_pos):
-        # req = MoveBehindBall()
-        # req.ball_position.position = Point(ball_pos[0], ball_pos[1], ball_pos[2]) #maybe have Z fixed 
-        # req.hole_position.position = Point(hole_pos[0], hole_pos[1], hole_pos[2]) #maybe have Z fixed
-        # req.if_add_constraint = False
-        ball_pose = Pose()
-        hole_pose = Pose()
-        ball_pose.position = Point(ball_pos[0], ball_pos[1], ball_pos[2]) #maybe have Z fixed 
-        hole_pose.position = Point(hole_pos[0], hole_pos[1], hole_pos[2])
-        # ball_pose.position = Point(0.5, -0.5, 2) #maybe have Z fixed 
-        # hole_pose.position = Point(0.6, 0.5, hole_pos[2])
-        #hole then ball
+    def move(self, ball_pose, hole_pose):
         print("ball pose is:")
         print(ball_pose)
         print("hole pose is:")
@@ -148,16 +75,14 @@ class GamePlanner(object):
     def loop(self):
         rate = rospy.Rate(2)
         #gets ball and hole positions in sawyer frame
-        ball_pos, hole_pos = self.get_positions()
+        ball_pose, hole_pose = self.get_positions()
         #tell sawyer to move behind ball in sawyer frame coordinates
-        self.move(ball_pos, hole_pos)
+        self.move(ball_pose, hole_pose)
         rospy.sleep(10) #dumb sleep for 10 seconds while we get behind ball
         self.hit_ball()
 
         while not rospy.is_shutdown():
             #get ball position in overhead camera frame coordinate
-
-
 
             rate.sleep()
 
