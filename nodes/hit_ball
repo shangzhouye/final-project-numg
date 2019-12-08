@@ -86,8 +86,8 @@ class HitTheBall(object):
 		elif -0.3<= self.wpose.position.y <= 0.3 and self.wpose.position.x<=0.7:
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2] -np.pi/6
-			joint_goal[3]= joint_goal[3]
+			joint_goal[2]= joint_goal[2] 
+			joint_goal[3]= joint_goal[3] -np.pi/6
 			joint_goal[4]= joint_goal[4]
 			joint_goal[5]= joint_goal[5] 
 			joint_goal[6] = joint_goal[6]
@@ -95,8 +95,8 @@ class HitTheBall(object):
 			joint_goal = self.move_group.get_current_joint_values()
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2] + np.pi/3
-			joint_goal[3]= joint_goal[3]
+			joint_goal[2]= joint_goal[2] 
+			joint_goal[3]= joint_goal[3] + np.pi/3
 			joint_goal[4]= joint_goal[4]
 			joint_goal[5]= joint_goal[5] 
 			joint_goal[6] = joint_goal[6]
