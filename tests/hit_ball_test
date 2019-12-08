@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+
+import unittest
+import rospy
+from mini_golf.srv import HitBall,DisplayPicture
+
+class TestingNode(unittest.TestCase):
+
+	def __init__(self,*args):
+		super(TestingNode,self).__init__(*args)
+		rospy.init_node("test_client")
+
+	def test_hit_ball(self):
+		rospy.wait_for_service("picture_display")
+		hit_the_ball = rospy.ServiceProxy("picture_display",DisplayPicture)
+		response = hit_the_ball(2) 
+		self.assertTrue(response,None)
+
+
+if __name__ == "__main__":
+    import rostest
+    rostest.rosrun('mini_golf', "testing_node", TestingNode)
