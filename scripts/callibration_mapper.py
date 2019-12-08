@@ -1,6 +1,7 @@
 import numpy as np
 
 callibration_pixel_pts = np.array([[507,341],[57,361],[49,144],[503,129]])
+to_use = np.copy(callibration_pixel_pts)
 physical_pts = np.array([[0.455,-0.494],[0.455,0.725],[1.064,0.725],[1.064,-0.494]])
 num_pts = len(callibration_pixel_pts)
 
@@ -8,48 +9,38 @@ num_pts = len(callibration_pixel_pts)
 virtual_pts = np.zeros((num_pts,2))
 err = np.zeros(num_pts)
 
-for i in range(num_pts):
-  p_ball_1 = np.array([callibration_pixel_pts[i][0],callibration_pixel_pts[i][1]])
-  p_ball_2 = np.copy(p_ball_1)
-  p_ball_3 = np.copy(p_ball_1)
-  p_ball_4 = np.copy(p_ball_1)
-
+def callibration(x_pix,y_pix,its):
+  print("Running")
+  p_balls = np.zeros((num_pts,2))
   R = np.array([[0,1],[-1,0]])
-  T = np.zeros((4,4))
-  #average from one side
-  p_ball_1[0] = -p_ball_1[0]
-  p_ball_1 = np.matmul(R,p_ball_1)
-  off_set_1 = callibration_pixel_pts[i]
-  off_set_1[0] = -off_set_1[0]
-  off_set_1 = np.matmul(R,off_set_1)
+  for i in range(num_pts):
+    p_balls[i] = np.copy([x_pix,y_pix])
+    # print(p_balls)
+    p_balls[i][0] = - p_balls[i][0]
 
-  p_ball_1 = p_ball_1 - off_set_1
-  p_ball_1 = p_ball_1 * 0.0023
-  p_ball_1 = p_ball_1 - physical_pts[0] 
-  p_ball_1 = -p_ball_1
+    p_balls[i] = np.matmul(R,p_balls[i])
+    #here's where the unique per callubration point stuff start
+    off_set = callibration_pixel_pts[i]
+    off_set[0] = -off_set[0]
+    off_set = np.matmul(R,off_set)
+    p_balls[i] = p_balls[i] - off_set
+    p_balls[i] = p_balls[i] * 0.0023
+    p_balls[i] = p_balls[i] - physical_pts[i]
+    p_balls[i] = -p_balls[i]
 
-  #average from the side 2
-  p_ball_2[0] = -p_ball_2[0]
-  p_ball_2 = np.matmul(R,p_ball_2)
-  off_set_2 = np.array([-361,-57])
-  p_ball_2 = p_ball_2 + off_set_2
-  p_ball_2 = p_ball_2 * 0.0023
-  p_ball_2 = p_ball_2 - physical_pts[1]  
-  p_ball_2 = -p_ball_2
+  x_phys = np.average(p_balls[:,0])
+  y_phys = np.average(p_balls[:,1])
+  x_actual = physical_pts[its][0]
+  y_actual = physical_pts[its][1]
+  # print("from pix: {}, {}\ngot phys: {}, {}\nreal phys:{}, {}".format(x_pix,y_pix,x_phys,y_phys,x_actual,y_actual))
 
-  # #average from the side 3
-  # p_ball_3[0] = -p_ball_3[0]
-  # p_ball_3 = np.matmul(R,p_ball_3)
-  # off_set_3 = np.array([-361,-57])
-  # p_ball_2 = p_ball_2 + off_set_2
-  # p_ball_2 = p_ball_2 * 0.0023
-  # p_ball_2 = p_ball_2 - physical_pts[1]  
-  # p_ball_2 = -p_ball_2
+  err = np.sqrt(np.square(x_phys-x_actual)+np.square(y_phys-y_actual))
+  return x_phys,y_phys,err
 
-  print("averaged guy")
-  averaged = (p_ball_1 + p_ball_2) * .5
-  virtual_pts[i] = averaged
-  print(averaged)
-  err[i] = np.sqrt(np.square(virtual_pts[i][0]-physical_pts[i][0])+np.square(virtual_pts[i][1]-physical_pts[i][1]))
-
-print(err)
+if __name__ == '__main__':
+  for i in range(num_pts):
+    x = to_use[i][0]
+    y = to_use[i][1]
+    print((x,y))
+    phys_guess_x,phys_guess_x,err = callibration(x,y,i)
+    print(err)
