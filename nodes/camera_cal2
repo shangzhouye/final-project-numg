@@ -18,6 +18,7 @@ def CameraCallib(object):
 		num_pts = len(callibration_pixel_pts)
 
 		rospy.Service('get_physical', GetPhysical, self.get_physical)
+		self.loop()
 
 	def get_physical(self, req):
 		print("fielding request")
