@@ -208,6 +208,26 @@ class MoveGroupPythonInterface(object):
 
 
 
+    def add_ball(self, ball_position):
+        ''' Add ball to the planning scene 
+        
+        Args:
+            ball_position (e.g.[0.63,-0.34,0.07]): The 3D position (x,y,z) of the ball in the world frame
+        '''
+        ball_pose = geometry_msgs.msg.PoseStamped()
+        ball_pose.header.frame_id = "world"
+        ball_pose.pose.orientation.w = 1.0
+        ball_pose.pose.position.x = ball_position[0]
+        ball_pose.pose.position.y = ball_position[1]
+        ball_pose.pose.position.z = -0.43
+        ball_name = "ball"
+        self.scene.add_sphere(ball_name, ball_pose, radius=0.02)
+        if not self.wait_object_update(ball_name):
+            rospy.logdebug('Attach ball failed.')
+
+
+
+
     def wait_object_update(self, object_name, timeout=4):
         ''' Wait for the collision update to be completed 
         
@@ -290,6 +310,10 @@ class MoveGroupPythonInterface(object):
 
     def move_to_start_position_pipline(self,req):
         ''' Complete the pipline of moving end effector to the starting pose '''
+        hole_position = [req.hole_position.position.x,req.hole_position.position.y,-0.43]
+        ball_position = [req.ball_position.position.x,req.ball_position.position.y,-0.43]
+
+        self.add_ball(ball_position)
 
         self.return_home()
 
@@ -297,15 +321,14 @@ class MoveGroupPythonInterface(object):
         if req.if_add_constraint:
             self.init_path_constraints()
 
-        hole_position = [req.hole_position.position.x,req.hole_position.position.y,-0.43]
-        ball_position = [req.ball_position.position.x,req.ball_position.position.y,-0.43]
-
         # calculate starting pose
         # position, orientation = self.get_start_pose([0.736,0.432,-0.43],[0.5,0.305,-0.43])
         position, orientation = self.get_start_pose(hole_position,ball_position)
 
         # go to starting pose
         if_success = self.go_to_pose(position,orientation)
+
+        self.scene.remove_world_object('ball')
 
         return MoveBehindBallResponse()
 

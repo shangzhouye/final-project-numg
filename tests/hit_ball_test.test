@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+
+<node name="tiger_woods" pkg="mini_golf" type="tiger_woods" />
+<!-- <node name="hit_ball" pkg="mini_golf" type="hit_ball" /> -->
+<include file="$(find mini_golf)/launch/moveit.launch"/>
+<test test-name="ball_test" pkg="mini_golf" type="hit_ball_test" />
+
+</launch>
