@@ -161,6 +161,29 @@ class DetectBall(object):
             self.ball_pose.position.x = centerX
             self.ball_pose.position.y = centerY
 
+            print("pixel ideation")
+            print("x:{}\ty:{}".format(centerX,centerY))
+
+            q = np.array([centerX,centerY]) 
+            off_set_to_game_orig = np.array([507,341])
+            q = q + off_set_to_game_orig
+            q[0] = -q[0] #flip handedness
+            R = np.array([[0,1],[-1,0]]) #-90 degree rotation matrix
+            q = np.matmul(R,q)
+            q = q * 0.0023
+
+            q[0] = q[0] + 0.455
+            q[1] = q[1] + -0.494
+            print("positional ideation")
+            print("x:{}\ty:{}".format(q[0],q[1]))
+
+
+            # T = np.array([[0,-1,0,0.715],[-1,0,0,-0.0174],[0,0,-1,1.65],[0,0,0,1]])
+            # b = np.array([centerX * 0.002,centerY * 0.002,1,1]) 
+
+            # a = np.matmul(T,b) 
+            # print("x:{}\ty:{}".format(a[0],a[1]))
+
             #publish ball position
             self.ball_pose_pub.publish(self.ball_pose)
 

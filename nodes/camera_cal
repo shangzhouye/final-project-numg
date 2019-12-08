@@ -78,55 +78,70 @@ class CameraCallib(object):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret_val, corners = cv2.findChessboardCorners(gray, (6, 8), None)
         # print(ret_val)
-        if ret_val == True:# and not self.killa:
+        if ret_val == True and not self.killa:
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), self.criteria)
             overhead_objpts = self.construct_obj_pts()
             #print(overhead_objpts)
+            rguess = np.array([[0,1,0   ],[1,0,0],[0,0,-1]])
             ret, rvec, tvec, inliers = cv2.solvePnPRansac(overhead_objpts,
                                                           corners2,
                                                           self.overhead_cam_matrix,
-                                                          self.overhead_cam_distortion)
+                                                          self.overhead_cam_distortion,
+                                                          useExtrinsicGuess = True
+                                                          )
 
+            # print(corners2.shape)
+            # cv2.drawChessboardCorners(gray, (6,8), corners2[0][0], ret)
+            # cv2.imshow("eggs",gray)
+            # cv2.waitKey()
             R = cv2.Rodrigues(rvec)
+            print(R)
             T = np.zeros((4, 4))
             T[0:3, 0:3] = R[0]
             T[-1, :] = np.array([0, 0, 0, 1])
             # print(T)
             q = quaternion_from_matrix(T)
-            T[0:3,-1] = tvec[0]
+            T[0:3,-1] = tvec[:,0]
+            # print(tvec)
             self.overhead_transform.rotation = Quaternion(q[0], q[1], q[2], q[3])
             self.overhead_transform.translation = Vector3(tvec[0][0], tvec[1][0], tvec[2][0])
             self.T_over = T
-            # print(self.overhead_transform)
+            # print("Overhead Trans")
+            # # print(self.overhead_transform)\
+            # print(T)
             self.killa = 1
 
     def sawyer_cal_callback(self, data):
         img = self.bridge.imgmsg_to_cv2(data, "bgr8")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret_val, corners = cv2.findChessboardCorners(gray, (6, 8), None)
-        if ret_val == True:# and not self.killb:
+        if ret_val == True and not self.killb:
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), self.criteria)
             sawyer_objpts = self.construct_obj_pts()
 
             ret, rvec, tvec, inliers = cv2.solvePnPRansac(sawyer_objpts,
                                                           corners2,
                                                           self.sawyer_cam_matrix,
-                                                          self.sawyer_cam_distortion)
+                                                          self.sawyer_cam_distortion,
+                                                          useExtrinsicGuess = True)
 
             R = cv2.Rodrigues(rvec)
+            print(R)
             T = np.zeros((4, 4))
             T[0:3, 0:3] = R[0]
             T[-1, :] = np.array([0, 0, 0, 1])
             # print(T)
             q = quaternion_from_matrix(T)
-            T[0:3,-1] = tvec[0]
+            T[0:3,-1] = tvec[:,0]
             self.sawyer_transform.rotation = Quaternion(q[0], q[1], q[2], q[3])
             self.sawyer_transform.translation = Vector3(tvec[0][0], tvec[1][0], tvec[2][0])
             self.T_saw = T
+            # print("Sawyer Trans")
+            # print(T)
             self.killb = 1
 
     def main(self):
-        rate = rospy.Rate(1)
+        rate = rospy.Rate(0.5)
         # while not rospy.is_shutdown() and not (self.killa and self.killb):
         while not rospy.is_shutdown():
             resp = self.get_pois()
@@ -137,12 +152,18 @@ class CameraCallib(object):
             ball_pos_g = np.matmul(se3_inv(self.T_over),ball_pos_o)
             hole_pos_g = np.matmul(se3_inv(self.T_over),hole_pos_o)
 
-            #transform to ball and hole positions in sawyer frame
-            ball_pos_s = np.around(np.matmul(self.T_saw, ball_pos_g),4)
-            hole_pos_s = np.around(np.matmul(self.T_saw, hole_pos_g),4)
+            # ball_pos_g_s = np.matmul(se3_inv(self.T_saw),ball_pos)
+            # hole_pos_g_s = np.matmul()
 
-            rospy.loginfo("hole pos:\n{}".format(hole_pos_s))
-            rospy.loginfo("ball pos:\n{}".format(ball_pos_s))
+            # rospy.loginfo("hole pos game space:\n{}".format(hole_pos_g))
+            # rospy.loginfo("ball pos game space:\n{}".format(ball_pos_g))
+
+            #transform to ball and hole positions in sawyer frame
+            ball_pos_s = np.matmul(self.T_saw, ball_pos_g) * 0.002
+            hole_pos_s = np.matmul(self.T_saw, hole_pos_g) * 0.002
+
+            #rospy.loginfo("hole pos saw camera space:\n{}".format(hole_pos_s))
+            rospy.loginfo("ball pos saw camera space:\n{}".format(ball_pos_s))
 
             rate.sleep()
 

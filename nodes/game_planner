@@ -39,16 +39,16 @@ class GamePlanner(object):
         self.hit_ball = rospy.ServiceProxy('/hit_ball', HitBall)
         
         #refelects that we might callibrate Tsawyer with camera or just with cuff
-        self.arena_callib = "param"
-        try:
-            self.arena_params = rospy.get_params('/arena')
-        except:
-            rospy.loginfo("no arena config params loaded into param server, using camera callib data")
-            self.arena_callib = "camera"
+        # self.arena_callib = "param"
+        # try:
+        #     self.arena_params = rospy.get_params('/arena')
+        # except:
+        #     rospy.loginfo("no arena config params loaded into param server, using camera callib data")
+        #     self.arena_callib = "camera"
         
         self.setup_robot()
         rospy.sleep(3) #sleep for 3 seconds to let things chill out
-        self.setup_Ts()
+        # self.setup_Ts()
         self.loop()
 
     def setup_robot(self):
@@ -57,50 +57,50 @@ class GamePlanner(object):
         self.init_robot()
 
 
-    def setup_Ts(self):
-        #call camera frame-getting service
-        cam_cal_resp = self.get_camera_cal()
+    # def setup_Ts(self):
+    #     #call camera frame-getting service
+    #     cam_cal_resp = self.get_camera_cal()
 
-        #sawyer & overhead transforms
-        sawyer_trans = cam_cal_resp.sawyer_transform
-        overhead_trans = cam_cal_resp.overhead_transform
+    #     #sawyer & overhead transforms
+    #     sawyer_trans = cam_cal_resp.sawyer_transform
+    #     overhead_trans = cam_cal_resp.overhead_transform
 
-        #sawyer/overhead rotations (quaternion form)
-        Q_sawyer_cw = np.array([sawyer_trans.rotation.x,
-                                sawyer_trans.rotation.y,
-                                sawyer_trans.rotation.z,
-                                sawyer_trans.rotation.w])
-        Q_overhead_cw = np.array([overhead_trans.rotation.x,
-                                  overhead_trans.rotation.y,
-                                  overhead_trans.rotation.z,
-                                  overhead_trans.rotation.w])
-        '''
-        Rotation matrices below; in se(3) form
-        '''
-        R_overhead_cw = quaternion_matrix(Q_overhead_cw)
-        print(R_overhead_cw)
-        R_sawyer_cw = quaternion_matrix(Q_sawyer_cw)
-        print(R_sawyer_cw)
+    #     #sawyer/overhead rotations (quaternion form)
+    #     Q_sawyer_cw = np.array([sawyer_trans.rotation.x,
+    #                             sawyer_trans.rotation.y,
+    #                             sawyer_trans.rotation.z,
+    #                             sawyer_trans.rotation.w])
+    #     Q_overhead_cw = np.array([overhead_trans.rotation.x,
+    #                               overhead_trans.rotation.y,
+    #                               overhead_trans.rotation.z,
+    #                               overhead_trans.rotation.w])
+    #     '''
+    #     Rotation matrices below; in se(3) form
+    #     '''
+    #     R_overhead_cw = quaternion_matrix(Q_overhead_cw)
+    #     print(R_overhead_cw)
+    #     R_sawyer_cw = quaternion_matrix(Q_sawyer_cw)
+    #     print(R_sawyer_cw)
 
-        #sawyer/overhead translation vectors
-        p_sawyer_cw = np.array([sawyer_trans.translation.x,
-                                sawyer_trans.translation.y,
-                                sawyer_trans.translation.z,
-                                1])
-        p_overhead_cw = np.array([overhead_trans.translation.x,
-                                  overhead_trans.translation.y,
-                                  overhead_trans.translation.z,
-                                  1])
+    #     #sawyer/overhead translation vectors
+    #     p_sawyer_cw = np.array([sawyer_trans.translation.x,
+    #                             sawyer_trans.translation.y,
+    #                             sawyer_trans.translation.z,
+    #                             1])
+    #     p_overhead_cw = np.array([overhead_trans.translation.x,
+    #                               overhead_trans.translation.y,
+    #                               overhead_trans.translation.z,
+    #                               1])
 
-        T_overhead_cw = np.zeros((4, 4))			#blank transformation matrices
-        T_sawyer_cw = np.zeros((4, 4))
-        T_overhead_cw[0:4, 0:4] = R_overhead_cw		#paste rotation matrices into transformation matrices (Rot mats are output as T mats)
-        T_sawyer_cw[0:4, 0:4] = R_sawyer_cw
-        T_overhead_cw[:, -1] = p_overhead_cw		#paste translation vectors into transformation matrices
-        T_sawyer_cw[:, -1] = p_sawyer_cw
+    #     T_overhead_cw = np.zeros((4, 4))			#blank transformation matrices
+    #     T_sawyer_cw = np.zeros((4, 4))
+    #     T_overhead_cw[0:4, 0:4] = R_overhead_cw		#paste rotation matrices into transformation matrices (Rot mats are output as T mats)
+    #     T_sawyer_cw[0:4, 0:4] = R_sawyer_cw
+    #     T_overhead_cw[:, -1] = p_overhead_cw		#paste translation vectors into transformation matrices
+    #     T_sawyer_cw[:, -1] = p_sawyer_cw
 
-        self.T_overhead_cw = T_overhead_cw
-        self.T_sawyer_cw = T_sawyer_cw
+    #     self.T_overhead_cw = T_overhead_cw
+    #     self.T_sawyer_cw = T_sawyer_cw
 
     def get_positions(self):
         resp = self.get_POIs()
@@ -113,8 +113,16 @@ class GamePlanner(object):
         hole_pos_g = np.matmul(se3_inv(self.T_overhead_cw),hole_pos_o)
 
         #transform to ball and hole positions in sawyer frame
-        ball_pos_s = np.matmul(self.T_sawyer_cw, ball_pos_g)
+        ball_pos_s = np.matmul(self.T_sawyer_cw, ball_pos_g) 
         hole_pos_s = np.matmul(self.T_sawyer_cw, hole_pos_g)
+
+        #bring it from pixel space to distance space
+        ball_pos_s[0:2] = ball_pos_s[0:2] * 0.002
+        hole_pos_s[0:2] = hole_pos_s[0:2] * 0.002
+        ball_pos_s[1] = -ball_pos_s[1]
+        hole_pos_s[1] = -hole_pos_s[1]
+        # ball_pos_s[0] =  -ball_pos_s[0]
+        # hole_pos_s[0] = -hole_pos_s[0]
 
         return ball_pos_s, hole_pos_s
 
@@ -125,10 +133,10 @@ class GamePlanner(object):
         # req.if_add_constraint = False
         ball_pose = Pose()
         hole_pose = Pose()
-        # ball_pose.position = Point(ball_pos[0], ball_pos[1], ball_pos[2]) #maybe have Z fixed 
-        # hole_pose.position = Point(hole_pos[0], hole_pos[1], hole_pos[2])
-        ball_pose.position = Point(0.5, -0.5, 2) #maybe have Z fixed 
-        hole_pose.position = Point(0.6, 0.5, hole_pos[2])
+        ball_pose.position = Point(ball_pos[0], ball_pos[1], ball_pos[2]) #maybe have Z fixed 
+        hole_pose.position = Point(hole_pos[0], hole_pos[1], hole_pos[2])
+        # ball_pose.position = Point(0.5, -0.5, 2) #maybe have Z fixed 
+        # hole_pose.position = Point(0.6, 0.5, hole_pos[2])
         #hole then ball
         print("ball pose is:")
         print(ball_pose)
