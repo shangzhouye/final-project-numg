@@ -6,21 +6,21 @@ import rospy
 from mini_golf.srv import DisplayPicture, DisplayPictureResponse
 
 def display_picture(req):
-    if req.result = 1:
-    	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/celebration.png"
+    if req.result == 1:
+    	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/celebration"
     	head_display = intera_interface.HeadDisplay()
     	picture = head_display.display_image(file_arg)#args.file, args.loop, args.rate)
-	return DisplayPictureResponse(picture)
-    elif req.result = 0:
-	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/hitting.png"
+	return DisplayPictureResponse()
+    elif req.result == 0:
+	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/hitting"
     	head_display = intera_interface.HeadDisplay()
     	picture = head_display.display_image(file_arg)
-	return DisplayPictureResponse(picture)
-    elif req.result = 3:
-	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/upset.png"
+	return DisplayPictureResponse()
+    elif req.result == 2:
+	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/upset"
     	head_display = intera_interface.HeadDisplay()
     	picture = head_display.display_image(file_arg)
-	return DisplayPictureResponse(picture)
+	return DisplayPictureResponse()
 
 def picture_server():
 	rospy.init_node("tiger_woods", anonymous=True)

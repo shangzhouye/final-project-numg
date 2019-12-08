@@ -10,10 +10,15 @@ class TestingNode(unittest.TestCase):
 		super(TestingNode,self).__init__(*args)
 		rospy.init_node("test_client")
 
-	def test_hit_ball(self):
+	def test_display_picture(self):
 		rospy.wait_for_service("picture_display")
-		hit_the_ball = rospy.ServiceProxy("picture_display",DisplayPicture)
-		response = hit_the_ball(2) 
+		disp_pic = rospy.ServiceProxy("picture_display",DisplayPicture)
+		response = disp_pic(2) 
+		self.assertTrue(response,None)
+	def test_hit_ball(self):
+		rospy.wait_for_service("hit_ball")
+		hit_the_ball = rospy.ServiceProxy("hit_ball",HitBall)
+		response = hit_the_ball()
 		self.assertTrue(response,None)
 
 
