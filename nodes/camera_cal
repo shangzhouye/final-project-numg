@@ -7,7 +7,26 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Transform, Quaternion, Vector3
 from tf.transformations import quaternion_from_matrix
-from mini_golf.srv import CamCal, CamCalResponse
+from mini_golf.srv import CamCal, CamCalResponse, CV_POIs, CV_POIsResponse
+
+#bringing this in for debug purposes
+def se3_inv(matrix):
+    """
+    Calculates the inverse of an se(3) transformation matrix.
+    """
+    R = matrix[0:3,0:3] #roation matrix
+    p = matrix[0:3,-1] #translation vector
+
+    RT = np.transpose(R)                        #transpose rotation matrix
+
+    inv_p = -np.matmul(RT, p)                      #invert translation vector
+
+    g = np.zeros((4,4))
+    g[0:3,0:3] = RT 
+    g[0:3,-1] = inv_p
+    g[-1,-1] = 1
+
+    return g                                    #output transformation matrix
 
 class CameraCallib(object):
     def __init__(self):
@@ -22,6 +41,11 @@ class CameraCallib(object):
 
         rospy.Subscriber("/overhead_image_out", Image, self.overhead_cal_callback)
         rospy.Subscriber("/io/internal_camera/head_camera/image_raw", Image, self.sawyer_cal_callback)
+
+        #bringing this in for debug purposes
+        self.get_pois = rospy.ServiceProxy('/get_pois', CV_POIs)
+        self.T_saw = np.zeros((4,4))
+        self.T_over = np.zeros((4,4))
 
         self.bridge = CvBridge()
 
@@ -54,7 +78,7 @@ class CameraCallib(object):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret_val, corners = cv2.findChessboardCorners(gray, (6, 8), None)
         # print(ret_val)
-        if ret_val == True:
+        if ret_val == True:# and not self.killa:
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), self.criteria)
             overhead_objpts = self.construct_obj_pts()
             #print(overhead_objpts)
@@ -69,8 +93,10 @@ class CameraCallib(object):
             T[-1, :] = np.array([0, 0, 0, 1])
             # print(T)
             q = quaternion_from_matrix(T)
+            T[0:3,-1] = tvec[0]
             self.overhead_transform.rotation = Quaternion(q[0], q[1], q[2], q[3])
             self.overhead_transform.translation = Vector3(tvec[0][0], tvec[1][0], tvec[2][0])
+            self.T_over = T
             # print(self.overhead_transform)
             self.killa = 1
 
@@ -78,7 +104,7 @@ class CameraCallib(object):
         img = self.bridge.imgmsg_to_cv2(data, "bgr8")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret_val, corners = cv2.findChessboardCorners(gray, (6, 8), None)
-        if ret_val == True:
+        if ret_val == True:# and not self.killb:
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), self.criteria)
             sawyer_objpts = self.construct_obj_pts()
 
@@ -93,15 +119,31 @@ class CameraCallib(object):
             T[-1, :] = np.array([0, 0, 0, 1])
             # print(T)
             q = quaternion_from_matrix(T)
+            T[0:3,-1] = tvec[0]
             self.sawyer_transform.rotation = Quaternion(q[0], q[1], q[2], q[3])
             self.sawyer_transform.translation = Vector3(tvec[0][0], tvec[1][0], tvec[2][0])
-
+            self.T_saw = T
             self.killb = 1
 
     def main(self):
-        rate = rospy.Rate(31)
+        rate = rospy.Rate(1)
         # while not rospy.is_shutdown() and not (self.killa and self.killb):
         while not rospy.is_shutdown():
+            resp = self.get_pois()
+            ball_pos_o = np.array([resp.ball_pose.position.x, resp.ball_pose.position.y, resp.ball_pose.position.z, 1])
+            hole_pos_o = np.array([resp.hole_pose.position.x, resp.hole_pose.position.y, resp.hole_pose.position.z, 1])
+
+            #transform to ball and hole positions in game frame
+            ball_pos_g = np.matmul(se3_inv(self.T_over),ball_pos_o)
+            hole_pos_g = np.matmul(se3_inv(self.T_over),hole_pos_o)
+
+            #transform to ball and hole positions in sawyer frame
+            ball_pos_s = np.around(np.matmul(self.T_saw, ball_pos_g),4)
+            hole_pos_s = np.around(np.matmul(self.T_saw, hole_pos_g),4)
+
+            rospy.loginfo("hole pos:\n{}".format(hole_pos_s))
+            rospy.loginfo("ball pos:\n{}".format(ball_pos_s))
+
             rate.sleep()
 
 if __name__ == '__main__':
