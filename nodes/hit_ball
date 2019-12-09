@@ -49,6 +49,18 @@ class HitTheBall(object):
 
 	### planning a path and then executing it ###
 	# def plan_path(self,hit_direction):
+
+	def return_home(self):
+		joint_goal = self.move_group.get_current_joint_values()
+		joint_goal[0]=0.0
+		joint_goal[1]=0.0
+		joint_goal[2]=0.0
+		joint_goal[3]=np.pi/2
+		joint_goal[4]=0.0
+		joint_goal[5]=0.0
+		joint_goal[6] = -np.pi/2
+		self.move_group.go(joint_goal, wait=True)
+		self.move_group.stop()
 		
 
 	def my_putter(self,req):
@@ -67,18 +79,18 @@ class HitTheBall(object):
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2] 
-			joint_goal[3]= joint_goal[3] +  np.pi/20
+			joint_goal[3]= joint_goal[3] 
 			joint_goal[4]= joint_goal[4] 
-			joint_goal[5]= joint_goal[5] 
+			joint_goal[5]= joint_goal[5] +  np.pi/2
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 			joint_goal = self.move_group.get_current_joint_values()
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2]
-			joint_goal[3]= joint_goal[3] - np.pi/3
+			joint_goal[3]= joint_goal[3] 
 			joint_goal[4]= joint_goal[4] 
-			joint_goal[5]= joint_goal[5] 
+			joint_goal[5]= joint_goal[5] - np.pi
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 
@@ -87,7 +99,7 @@ class HitTheBall(object):
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2] 
-			joint_goal[3]= joint_goal[3] #+ np.pi/6
+			joint_goal[3]= joint_goal[3] + np.pi/12
 			joint_goal[4]= joint_goal[4]
 			joint_goal[5]= joint_goal[5] 
 			joint_goal[6] = joint_goal[6]
@@ -96,25 +108,25 @@ class HitTheBall(object):
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2] 
-			joint_goal[3]= joint_goal[3] - np.pi/3
+			joint_goal[3]= joint_goal[3] - np.pi/4
 			joint_goal[4]= joint_goal[4]
 			joint_goal[5]= joint_goal[5] 
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 		## AREA 2.5 ##
 		elif -0.3<= self.wpose.position.y <= 0 and self.wpose.position.x<=0.7:
-			joint_goal[0]= joint_goal[0] 
+			joint_goal[0]= joint_goal[0] - np.pi/4
 			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2] #- np.pi/6
+			joint_goal[2]= joint_goal[2] 
 			joint_goal[3]= joint_goal[3] 
 			joint_goal[4]= joint_goal[4]
 			joint_goal[5]= joint_goal[5] 
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0] 
+			joint_goal[0]= joint_goal[0] + np.pi/2
 			joint_goal[1]= joint_goal[1]
-			joint_goal[2]= joint_goal[2] + np.pi/3
+			joint_goal[2]= joint_goal[2] 
 			joint_goal[3]= joint_goal[3] 
 			joint_goal[4]= joint_goal[4]
 			joint_goal[5]= joint_goal[5] 
@@ -123,21 +135,21 @@ class HitTheBall(object):
 
 		## AREA 3 ##
 		if self.wpose.position.y < -0.3 and self.wpose.position.x<=0.7:
-			joint_goal[0]= joint_goal[0]
+			joint_goal[0]= joint_goal[0] -np.pi/4
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2]
 			joint_goal[3]= joint_goal[3]
 			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] -np.pi/2
+			joint_goal[5]= joint_goal[5] 
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0]
+			joint_goal[0]= joint_goal[0] + np.pi/2
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2]
 			joint_goal[3]= joint_goal[3]
 			joint_goal[4]= joint_goal[4]
-			joint_goal[5]= joint_goal[5] + np.pi
+			joint_goal[5]= joint_goal[5] 
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 		
@@ -164,7 +176,7 @@ class HitTheBall(object):
 		## AREA 5##			
 		elif -0.3<= self.wpose.position.y <= 0.3 and self.wpose.position.x>0.7:
 			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0] -np.pi/6
+			joint_goal[0]= joint_goal[0] -np.pi/5
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2]
 			joint_goal[3]= joint_goal[3]
@@ -173,7 +185,7 @@ class HitTheBall(object):
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 			joint_goal = self.move_group.get_current_joint_values()
-			joint_goal[0]= joint_goal[0] + np.pi/3
+			joint_goal[0]= joint_goal[0] + np.pi/4
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2]
 			joint_goal[3]= joint_goal[3]
@@ -195,6 +207,8 @@ class HitTheBall(object):
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 
+		rospy.sleep(5)
+		self.return_home()
 		return HitBallResponse()
 
 
