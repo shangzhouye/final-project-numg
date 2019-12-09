@@ -37,7 +37,8 @@ class GamePlanner(object):
         self.init_robot = rospy.ServiceProxy('/init_robot', InitRobot)
         self.move_behind_ball = rospy.ServiceProxy('/move_behind_ball', MoveBehindBall)
         self.hit_ball = rospy.ServiceProxy('/hit_ball', HitBall)
-        
+        self.display_picture = rospy.ServiceProxy('/picture_display', DisplayPicture)
+
         #refelects that we might callibrate Tsawyer with camera or just with cuff
         # self.arena_callib = "param"
         # try:
@@ -84,10 +85,12 @@ class GamePlanner(object):
         #gets ball and hole positions in sawyer frame
         ball_pose, hole_pose = self.get_positions()
         #tell sawyer to move behind ball in sawyer frame coordinates
+        self.display_picture(1)
         self.move(ball_pose, hole_pose)
         print("setting up to hit wait for it....")
         rospy.sleep(5) #dumb sleep for 10 seconds while we get behind ball
-        self.hit_ball()
+        self.hit_ball() 
+        self.display_picture(0)
 
         while not rospy.is_shutdown():
             #get ball position in overhead camera frame coordinate
