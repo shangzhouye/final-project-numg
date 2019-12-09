@@ -9,48 +9,61 @@ from geometry_msgs.msg import Transform, Quaternion, Vector3
 from tf.transformations import quaternion_from_matrix
 from mini_golf.srv import GetPhysical, GetPhysicalResponse, CV_POIs, CV_POIsResponse
 
-def CameraCallib(object):
+class CameraCallib(object):
 	def __init__(self):
 		#where we see the pixel coords of the ball from cv detect
-		self.callibration_pixel_pts = np.array([[507,341],[57,361],[49,144],[503,129]])
+		self.callibration_pixel_pts = np.array([[516,362],
+												[286,365],
+												[51,374],
+												[46,146],
+												[277,141],
+												[514,139],
+												[281,251]])
 		#physical mapping from sawyer frame
-		self.physical_pts = np.array([[0.455,-0.494],[0.455,0.725],[1.064,0.725],[1.064,-0.494]])
-		num_pts = len(callibration_pixel_pts)
+		self.physical_pts = np.array([[0.438,-0.465],
+									  [0.438,.1447],
+									  [0.438,.7064],
+									  [1.0477,.7064], 
+									  [1.0477,.1477],
+									  [1.0477,-0.465],
+									  [.7428,.1447]])
+		self.num_pts = len(self.callibration_pixel_pts)
 
 		rospy.Service('get_physical', GetPhysical, self.get_physical)
 		self.loop()
 
 	def get_physical(self, req):
 		print("fielding request")
-		p_balls = np.zeros((num_pts,2))
+		p_balls = np.zeros((self.num_pts,2))
 		R = np.array([[0,1],[-1,0]])
-		for i in range(num_pts):
-			p_balls[i] = np.copy([req.position.x,req.position.y])
+		for i in range(self.num_pts):
+			p_balls[i] = np.copy([req.pixel_frame.position.x,req.pixel_frame.position.y])
 			# print(p_balls)
 			p_balls[i][0] = - p_balls[i][0]
 
 			p_balls[i] = np.matmul(R,p_balls[i])
 			#here's where the unique per callubration point stuff start
-			off_set = callibration_pixel_pts[i]
+			off_set = self.callibration_pixel_pts[i]
 			off_set[0] = -off_set[0]
 			off_set = np.matmul(R,off_set)
 			p_balls[i] = p_balls[i] - off_set
 			p_balls[i] = p_balls[i] * 0.0023
-			p_balls[i] = p_balls[i] - physical_pts[i]
+			p_balls[i] = p_balls[i] - self.physical_pts[i]
 			p_balls[i] = -p_balls[i]
 
 		x_phys = np.average(p_balls[:,0])
 		y_phys = np.average(p_balls[:,1])
 
 		resp = GetPhysicalResponse()
-		resp.position.x = x_phys
-		resp.position.y = y_phys
+		resp.sawyer_frame.position.x = x_phys
+		resp.sawyer_frame.position.y = y_phys
 
 		return resp
 
 	def loop(self):
 		rate = rospy.Rate(10)
 		while not rospy.is_shutdown():
+
 			rate.sleep()
 
 if __name__ == '__main__':
