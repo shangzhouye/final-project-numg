@@ -20,13 +20,13 @@ class CameraCallib(object):
 												[514,139],
 												[281,251]])
 		#physical mapping from sawyer frame
-		self.physical_pts = np.array([[0.438,-0.465],
-									  [0.438,.1447],
-									  [0.438,.7064],
-									  [1.0477,.7064], 
-									  [1.0477,.1477],
-									  [1.0477,-0.465],
-									  [.7428,.1447]])
+		self.physical_pts = np.array([[0.45,-0.4544],
+									  [0.45,.1543],
+									  [0.45,.708],
+									  [1.0597,.708], 
+									  [1.0597,.1543],
+									  [1.086,-0.4544],
+									  [.7549,.1543]])
 		self.num_pts = len(self.callibration_pixel_pts)
 
 		rospy.Service('get_physical', GetPhysical, self.get_physical)
