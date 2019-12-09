@@ -64,6 +64,7 @@ add_service_files(
   MoveBehindBall.srv
   HitBall.srv
   DisplayPicture.srv
+  GetPhysical.srv
 )
 
 ## Generate actions in the 'action' folder
