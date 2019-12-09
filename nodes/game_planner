@@ -47,6 +47,7 @@ class GamePlanner(object):
         #     self.arena_callib = "camera"
         
         self.setup_robot()
+        print("initializing robot...")
         rospy.sleep(3) #sleep for 3 seconds to let things chill out
         self.loop()
 
@@ -61,16 +62,22 @@ class GamePlanner(object):
         hole_pose_camera = resp.hole_pose
         ball_pose_sawyer = self.get_physical(ball_pose_camera)
         hole_pose_sawyer = self.get_physical(hole_pose_camera)
-    
+        print("ball:")
+        print((ball_pose_sawyer.sawyer_frame.position.x,ball_pose_sawyer.sawyer_frame.position.y))
+        print("hole:")
+        print((hole_pose_sawyer.sawyer_frame.position.x,hole_pose_sawyer.sawyer_frame.position.y))
+
         return ball_pose_sawyer, hole_pose_sawyer
 
     def move(self, ball_pose, hole_pose):
         print("ball pose is:")
-        print(ball_pose)
+        print(ball_pose.sawyer_frame)
         print("hole pose is:")
         print(hole_pose)
+        hole_pose.sawyer_frame.position.x = 0.9536
+        hole_pose.sawyer_frame.position.y = 0.5726
 
-        self.move_behind_ball(hole_pose, ball_pose, False)
+        self.move_behind_ball(hole_pose.sawyer_frame, ball_pose.sawyer_frame, False)
 
     def loop(self):
         rate = rospy.Rate(2)
@@ -78,12 +85,13 @@ class GamePlanner(object):
         ball_pose, hole_pose = self.get_positions()
         #tell sawyer to move behind ball in sawyer frame coordinates
         self.move(ball_pose, hole_pose)
-        rospy.sleep(10) #dumb sleep for 10 seconds while we get behind ball
+        print("setting up to hit wait for it....")
+        rospy.sleep(5) #dumb sleep for 10 seconds while we get behind ball
         self.hit_ball()
 
         while not rospy.is_shutdown():
             #get ball position in overhead camera frame coordinate
-
+            # self.get_positions()
             rate.sleep()
 
 
