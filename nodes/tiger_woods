@@ -7,17 +7,17 @@ from mini_golf.srv import DisplayPicture, DisplayPictureResponse
 
 def display_picture(req):
     if req.result == 1:
-    	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/celebration"
+    	file_arg = "~/msr/fall2019/embedded/final/ws/src/mini_golf/pictures/celebration.png"
     	head_display = intera_interface.HeadDisplay()
     	picture = head_display.display_image(file_arg)#args.file, args.loop, args.rate)
 	return DisplayPictureResponse()
     elif req.result == 0:
-	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/hitting"
+	file_arg = "~/msr/fall2019/embedded/final/ws/src/mini_golf/pictures/hitting.png"
     	head_display = intera_interface.HeadDisplay()
     	picture = head_display.display_image(file_arg)
 	return DisplayPictureResponse()
     elif req.result == 2:
-	file_arg = "/home/yigitcancomlek/final_ws/src/mini_golf/pictures/upset"
+	file_arg = "~/msr/fall2019/embedded/final/ws/src/mini_golf/pictures/upset.png"
     	head_display = intera_interface.HeadDisplay()
     	picture = head_display.display_image(file_arg)
 	return DisplayPictureResponse()

@@ -39,14 +39,6 @@ class GamePlanner(object):
         self.hit_ball = rospy.ServiceProxy('/hit_ball', HitBall)
         self.display_picture = rospy.ServiceProxy('/picture_display', DisplayPicture)
 
-        #refelects that we might callibrate Tsawyer with camera or just with cuff
-        # self.arena_callib = "param"
-        # try:
-        #     self.arena_params = rospy.get_params('/arena')
-        # except:
-        #     rospy.loginfo("no arena config params loaded into param server, using camera callib data")
-        #     self.arena_callib = "camera"
-        
         self.setup_robot()
         print("initializing robot...")
         rospy.sleep(3) #sleep for 3 seconds to let things chill out

@@ -115,7 +115,7 @@ class HitTheBall(object):
 			self.move_group.go(joint_goal, wait=True)
 		## AREA 2.5 ##
 		elif -0.3<= self.wpose.position.y <= 0 and self.wpose.position.x<=0.7:
-			joint_goal[0]= joint_goal[0] - np.pi/4
+			joint_goal[0]= joint_goal[0] - np.pi/3
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2] 
 			joint_goal[3]= joint_goal[3] 
@@ -201,7 +201,7 @@ class HitTheBall(object):
 			joint_goal[0]= joint_goal[0] 
 			joint_goal[1]= joint_goal[1]
 			joint_goal[2]= joint_goal[2] 
-			joint_goal[3]= joint_goal[3] - np.pi/3
+			joint_goal[3]= joint_goal[3] 
 			joint_goal[4]= joint_goal[4] 
 			joint_goal[5]= joint_goal[5] #- np.pi/2
 			joint_goal[6] = joint_goal[6]

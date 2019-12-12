@@ -106,7 +106,7 @@ class MoveGroupPythonInterface(object):
         self.move_group.set_max_acceleration_scaling_factor(1.0)
 
         # try to find the solution for several times
-        for i in range(10):
+        for i in range(5):
 
             plan = self.move_group.go(wait=True)
 

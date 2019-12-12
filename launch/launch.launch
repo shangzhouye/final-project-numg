@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+	<include file="$(find mini_golf)/launch/callibration.launch"/>
+	<node pkg="mini_golf" type="cv_detect_ball" name="cv_detect_ball"/>
+	<node pkg="mini_golf" type="camera_cal2" name="camera_cal2"/>
+	<include file="$(find mini_golf)/launch/moveit.launch">
+		<arg name="if_sim" value="false"/>
+	</include>
+	<node pkg="mini_golf" name="game_planner" type="game_planner"/>
+</launch>
