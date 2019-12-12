@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from mini_golf.srv import CV_POIs, CV_POIsResponse, GetPhysical, GetPhysicalResponse, HitBall, HitBallResponse, InitRobot, InitRobotResponse, MoveBehindBall, MoveBehindBallResponse, DisplayPicture, DisplayPictureResponse
+from mini_golf.srv import CV_POIs, CV_POIsResponse, GetPhysical, GetPhysicalResponse, HitBall, HitBallResponse, InitRobot, InitRobotResponse, MoveBehindBall, MoveBehindBallResponse, DisplayPicture, DisplayPictureResponse, GameOn, GameOnResponse
 from geometry_msgs.msg import Transform, Pose, Point
 import numpy as np
 from tf.transformations import quaternion_matrix
@@ -27,9 +27,15 @@ def se3_inv(matrix):
 
 class GamePlanner(object):
     def __init__(self):
-        #perform subscriptiosn
+        #establish game on service for user to call
+        rospy.Service('/game_on', GameOn, self.game_on)
 
-        #establish publishers
+        #wait for services
+        rospy.wait_for_service('/get_pois')
+        rospy.wait_for_service('/init_robot')
+        rospy.wait_for_service('/get_physical')
+        rospy.wait_for_service('/move_behind_ball')
+        rospy.wait_for_service('/hit_ball')
 
         #establish service proxies
         self.get_physical = rospy.ServiceProxy('/get_physical', GetPhysical)
@@ -43,6 +49,20 @@ class GamePlanner(object):
         print("initializing robot...")
         rospy.sleep(3) #sleep for 3 seconds to let things chill out
         self.loop()
+
+    def game_on(self, req):
+        #gets ball and hole positions in sawyer frame
+        ball_pose, hole_pose = self.get_positions()
+        #tell sawyer to move behind ball in sawyer frame coordinates
+        # self.display_picture(1)
+        self.move(ball_pose, hole_pose)
+        print("setting up to hit wait for it....")
+        rospy.sleep(5) #dumb sleep for 10 seconds while we get behind ball
+        self.hit_ball() 
+        # self.display_picture(0)
+
+        return GameOnResponse()
+
 
     def setup_robot(self):
         #figure out x,y origin of gamespace in sawyer frame
@@ -74,16 +94,6 @@ class GamePlanner(object):
 
     def loop(self):
         rate = rospy.Rate(2)
-        #gets ball and hole positions in sawyer frame
-        ball_pose, hole_pose = self.get_positions()
-        #tell sawyer to move behind ball in sawyer frame coordinates
-        # self.display_picture(1)
-        self.move(ball_pose, hole_pose)
-        print("setting up to hit wait for it....")
-        rospy.sleep(5) #dumb sleep for 10 seconds while we get behind ball
-        self.hit_ball() 
-        # self.display_picture(0)
-
         while not rospy.is_shutdown():
             #get ball position in overhead camera frame coordinate
             # self.get_positions()

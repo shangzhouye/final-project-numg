@@ -65,6 +65,7 @@ add_service_files(
   HitBall.srv
   DisplayPicture.srv
   GetPhysical.srv
+  GameOn.srv
 )
 
 ## Generate actions in the 'action' folder
