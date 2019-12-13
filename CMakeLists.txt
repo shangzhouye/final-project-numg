@@ -217,9 +217,10 @@ install(PROGRAMS
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
-catkin_add_nosetests(tests)
+
 
 if (CATKIN_ENABLE_TESTING)
+    catkin_add_nosetests(tests)
     find_package(rostest REQUIRED)
     add_rostest(tests/hit_ball_test.test)
 endif()
