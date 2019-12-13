@@ -4,6 +4,12 @@ import intera_interface
 import argparse
 import rospy
 from mini_golf.srv import DisplayPicture, DisplayPictureResponse
+"""
+This node display different pictures of Tiger_woods according to the message recieved from the game planner. This action is done under the picture_display service. Pictures can be found under the pictures folder.
+
+SERVICE:
+ + picture_display: this service displays different pictures of Tiger Woods depending on the status of the robot. It takes int64 integers from the game planner and returns nothing.  
+"""
 
 def display_picture(req):
     if req.result == 1:

@@ -15,18 +15,24 @@ import numpy as np
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from mini_golf.srv import HitBall, HitBallResponse
 
+""" 
+This node checks the current location of the end effector. Then it makes the sawyer robot hit the ball with a specific joint motion according to the end effector location. After the hitting motion, it returns back to sawyer's home configuration. This whole motion is then turned into a service
+
+SERVICE:
+
+--> hit_ball: The node creates the hit_ball service to be called in the game planner node. The service takes nothing and also returns nothing.
+
+"""
 class HitTheBall(object):
 	def __init__(self):
 		self.robot = moveit_commander.RobotCommander()
 		self.scene = moveit_commander.PlanningSceneInterface()
 		self.group_name = "right_arm"
 		self.move_group = moveit_commander.MoveGroupCommander(self.group_name)
-		#self.display_trajectory_publisher = rospy.Publisher('/move_group display_planned_path',moveit_msgs.msg.DisplayTrajectory,queue_size=20)
 		
 	### Finding the x-y coordinates for the forward motion ###
-	def ball_pos_to_sawyer(self,ball_pos):
-		#ball_pose = np.array([self.ball_pose.position.x,self.ball_pose.position.y,self.ball_pose.position.z])
-		#hole_pose = np.array([self.hole_pose.position.x,self.hole_pose.position.y,self.hole_pose.position.z])		
+	
+	def ball_pos_to_sawyer(self,ball_pos):	
 		ball_pose = [0.7,0.355,-0.43]
 		hole_pose = [0.736,0.432,-0.44]
 		ball_x = ball_pose[0]
@@ -47,8 +53,8 @@ class HitTheBall(object):
 		current_state = self.robot.get_current_state() 
 		return current_state
 
-	### planning a path and then executing it ###
-	# def plan_path(self,hit_direction):
+	### returns to the home configuration ###
+	
 
 	def return_home(self):
 		joint_goal = self.move_group.get_current_joint_values()
@@ -62,15 +68,11 @@ class HitTheBall(object):
 		self.move_group.go(joint_goal, wait=True)
 		self.move_group.stop()
 		
-
+	### checks the location of the end effector makes the putting motion according to that location#
 	def my_putter(self,req):
 		self.waypoints = []
 		self.wpose = self.move_group.get_current_pose().pose
 		joint_goal = self.move_group.get_current_joint_values()
-		# self.ball_pose = req.ball_position
-		# self.hole_pose = req.hole_position
-		#return HitBallResponse()
-
 		
 		## AREA 1 ##	
 		
@@ -203,7 +205,7 @@ class HitTheBall(object):
 			joint_goal[2]= joint_goal[2] 
 			joint_goal[3]= joint_goal[3] 
 			joint_goal[4]= joint_goal[4] 
-			joint_goal[5]= joint_goal[5] #- np.pi/2
+			joint_goal[5]= joint_goal[5] - np.pi/2
 			joint_goal[6] = joint_goal[6]
 			self.move_group.go(joint_goal, wait=True)
 
@@ -217,23 +219,6 @@ if __name__ == '__main__':
     rospy.init_node('hit_ball', anonymous=True, log_level=rospy.DEBUG)
     my_put = HitTheBall()
     rospy.loginfo(my_put.current_state())
-    # hit_direction= my_put.ball_pos_to_sawyer([0.35,0.30,-0.44])
     hit_service = rospy.Service('hit_ball', HitBall, my_put.my_putter)
-    #my_put.plan_path(hit_direction)
     rospy.spin()
 
-"""
-Additional code that might be useful later
-
-
-
-		self.wpose.position.x = self.wpose.position.x -hit_direction[0]*1
-		self.wpose.position.y = self.wpose.position.y -hit_direction[1]*1
-		self.waypoints.append(copy.deepcopy(self.wpose))
-		self.wpose.position.x = self.wpose.position.x+hit_direction[0]*2.5
-		self.wpose.position.y = self.wpose.position.y + hit_direction[1]*2.5
-		self.waypoints.append(copy.deepcopy(self.wpose))
-			
-		(plan,fraction) = self.move_group.compute_cartesian_path(self.waypoints,0.01,0.0)
-		self.move_group.execute(plan,wait=True)
-"""
