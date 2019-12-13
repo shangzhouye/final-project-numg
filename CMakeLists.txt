@@ -174,6 +174,8 @@ install(PROGRAMS
   nodes/move_group_python_interface
   nodes/hit_ball
   nodes/tiger_woods
+  nodes/camera_cal
+  nodes/camera_cal2
   sawyer_setup.bash
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
