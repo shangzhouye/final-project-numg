@@ -1,0 +1,6 @@
+- git:
+    local-name: src/sawyer_moveit
+    uri: git@github.com:shangzhouye/sawyer_moveit.git
+- git:
+    local-name: src/mini_golf
+    uri: https://github.com/ME495-EmbeddedSystems/final-project-numg.git
