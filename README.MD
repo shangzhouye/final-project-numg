@@ -4,9 +4,19 @@
 
 **Skills: ROS, motion planning, MoveIt, inverse kinematics, computer vision, Git usage**
 
+## Demo
+
+<p align="center">
+  <img width="600" height="450" src="https://github.com/shangzhouye/final-project-numg/blob/master/pictures/demo.gif?raw=true">
+</p>
+
+For a video of the robot in action, [please watch this video](https://www.youtube.com/watch?v=8vYBKLIraps).
+
 ## Overview
 
-The goal of this project was to program a Rethink Sawyer robot to play mini-golf. Given a game space mimicking a putting green, the robot recognizes the ball and the hole, and moves itself into a striking position behind the ball. Then, it actuates its joints to perform a putting motion and hit the ball into the hole. For a video of the robot in action, [please watch this video](https://www.youtube.com/watch?v=8vYBKLIraps).
+This repository is the final project of ME495: Embedded Systems in Robotics (ROS), Dec. 2019. 
+
+The goal of this project was to program a Rethink Sawyer robot to play mini-golf. Given a game space mimicking a putting green, the robot recognizes the ball and the hole, and moves itself into a striking position behind the ball. Then, it actuates its joints to perform a putting motion and hit the ball into the hole. 
 
 ## Project Overview
 
