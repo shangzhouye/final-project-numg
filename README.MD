@@ -1,6 +1,8 @@
 # Mini Golf
 
-*Joshua Cohen, Yigitcan Comlek, Riley Knox, and Shangzhou Ye*
+*Shangzhou Ye, Joshua Cohen, Yigitcan Comlek and Riley Knox*
+
+**Skills: ROS, motion planning, MoveIt, inverse kinematics, computer vision, Git usage**
 
 ## Overview
 
@@ -11,11 +13,15 @@ The goal of this project was to program a Rethink Sawyer robot to play mini-golf
 ### Operation
 Once installed, this package can be operated using two simple commands. To launch all the nodes and prepare to hit, enter in the command line:
 
-        roslaunch mini_golf launch.launch
+```
+roslaunch mini_golf launch.launch
+```
 
 The robot will then wait for the command to hit the ball. This command is a service that can be called by entering:
 
-        rosservice call /game_on
+```
+rosservice call /game_on
+```
 
 ### Nodes
 
@@ -33,18 +39,15 @@ The function of these nodes will be described in detail later. However, the prog
 
 ### Physical Equipment:
 
-![setup](pictures/setup.png)
-Robot + game space shown here. The first-generation putter is attached.
-* Acrylic game board (2' x 4') with holes </br>
+* Acrylic game board (2' x 4') with holes
 * Artificial turf putting surface: 8 (1' x 1') pieces
 * Golf ball
-* 3D printed putter attachment - see CAD image/drawing below
-![putter CAD](pictures/putter_onshape.png) </br> </br>
-![putter drawing](pictures/putter_drawing.png)
+* 3D printed putter
 * Rethink Robotics Sawyer robot
 * External USB camera
 
-### 3rd Party Packages:
+### Third Party Packages:
+
 * Sawyer_tools
 * Sawyer_gazebo
 * Sawyer_moveit
@@ -53,6 +56,7 @@ Robot + game space shown here. The first-generation putter is attached.
 * OpenCV
 
 ### Node Descriptions:
+
 #### Computer Vision
 - Objective
     - Design and program a Sawyer camera interface that accurately recognizes the game space, including the ball, hole, and the game area itself, and to package and distribute that information in a way that allows other program components to successfully interact with the game space.
@@ -66,6 +70,7 @@ Robot + game space shown here. The first-generation putter is attached.
     - Work on automatic camera calibration.
 
 #### Mapping Frames
+
 - Objective
     - Provide setup calibration procedure for translating overhead camera picture coordinates to real world Sawyer frame coordinates.
     - Provide a service to the game planner that could convert overhead camera picture coordinates to real world Sawyer frame coordinates.
@@ -78,6 +83,7 @@ Robot + game space shown here. The first-generation putter is attached.
     - Using April tags such that the overhead frame and Sawyer could locate themselves in space using the transforms provided by perceiving the April tags. This is likely the optimal approach.
 
 #### Moving Behind Ball
+
 - Objective
     - Move the putter behind the ball to prepare for hitting. The putter should be positioned behind the ball, collinear with the ball and hole, and facing towards the hole.
     - Obstacle avoidance: the putter should not collide with the table, ball, or robot.
@@ -92,6 +98,7 @@ Robot + game space shown here. The first-generation putter is attached.
     - The distance behind the ball can be automatically calculated according to the distance between the ball and hole.
 
 #### Hitting Ball
+
 - Objective
     - Hit the ball towards the hole using a motion similar to an actual golf swing.
     - Align the putter with the direction to the hole right before hitting the ball.
@@ -115,7 +122,7 @@ Integration - Create services to communicate between nodes and build control int
 Operation of joints - Make the joints move according to the trajectory that is planned </br></br>
 * Shangzhou </br>
 Distance/angle calculation - Calculate the distance and the angles to the hole according to the location of the ball </br>
-Path planning in task space - Plan a path according to the location of the ball in the task space </br> </br>
+Motion planning in task space - Plan a path according to the location of the ball in the task space </br> </br>
 * Riley </br>
 Mechanical - Design of putter/game space; fabrication of game space </br>
 Computer Vision - Identification of ball, hole, and game space
