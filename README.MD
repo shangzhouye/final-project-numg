@@ -16,7 +16,7 @@ For a video of the robot in action, [please watch this video](https://www.youtub
 
 The goal of this project was to program a Rethink Sawyer robot to play mini-golf. Given a game space mimicking a putting green, the robot recognizes the ball and the hole, and moves itself into a striking position behind the ball. Then, it actuates its joints to perform a putting motion and hit the ball into the hole. 
 
-This repository is the final project of ME495: Embedded Systems in Robotics (ROS), Dec. 2019. 
+This repository is our final project of ME495: Embedded Systems in Robotics (ROS), Dec. 2019. The theme is recreational robotics.
 
 ## My Contribution
 
