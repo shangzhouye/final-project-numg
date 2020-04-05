@@ -2,8 +2,6 @@
 
 *Shangzhou Ye, Joshua Cohen, Yigitcan Comlek and Riley Knox*
 
-**Skills: ROS, motion planning, MoveIt, inverse kinematics, computer vision, Git usage**
-
 ## Demo
 
 <p align="center">
@@ -17,13 +15,6 @@ For a video of the robot in action, [please watch this video](https://www.youtub
 The goal of this project was to program a Rethink Sawyer robot to play mini-golf. Given a game space mimicking a putting green, the robot recognizes the ball and the hole, and moves itself into a striking position behind the ball. Then, it actuates its joints to perform a putting motion and hit the ball into the hole. 
 
 This repository is our final project of ME495: Embedded Systems in Robotics (ROS), Dec. 2019. The theme is recreational robotics.
-
-## My Contribution
-
-- Configured MoveIt to work with sawyer; forked moveit_sawyer package for the specific use of this project, and modified joint velocity limits and scaling according to our requirements.
-- Completed position and angle calculation using the position of the ball and hole obtained from the CV node.
-- Implemented collision avoidance by adding the table, putter, and ball to the motion planning scene. Removed the self-collision check between the putter and the gripper.
-- Enhanced the capability to reliably find solutions with inverse kinematics and obstacle avoidance motion planning by requesting the numerical solution multiple times.
 
 ## Project Overview
 
